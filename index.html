@@ -831,7 +831,7 @@
                     this.playSound('wrong'); this.showWrongTemp(fretDiv);
                     if (this.currentMode !== 5) {
                         this.isQuestionActive = false;
-                        document.getElementById('ui-subtext').textContent = "오답입니다. 힌트 위치를 확인하세요.";
+                        document.getElementById('ui-subtext').textContent = "오답입니다. 정답 위치를 확인하세요.";
                         this.showHints(this.targetPitch, this.targetString);
                         document.getElementById('btn-next').style.display = 'block'; 
                     }
