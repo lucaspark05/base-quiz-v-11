@@ -120,16 +120,6 @@
         .choice-btn.correct { background-color: var(--correct-color) !important; color: white !important; border-color: var(--correct-color); }
         .choice-btn.wrong { background-color: var(--wrong-color) !important; color: white !important; border-color: var(--wrong-color); }
 
-        .edu-content {
-            background-color: var(--panel-bg); padding: 20px; border-radius: 12px;
-            box-shadow: 0 4px 6px var(--shadow); width: 100%; line-height: 1.6;
-        }
-        .edu-content h2 { margin-top: 15px; margin-bottom: 8px; color: var(--primary-color); border-bottom: 2px solid var(--secondary-color); padding-bottom: 5px; }
-        .edu-content h2:first-child { margin-top: 0; }
-        .edu-content ul { padding-left: 20px; margin-bottom: 12px; }
-        .edu-content p { margin-bottom: 12px; }
-        .edu-content .highlight { font-weight: bold; color: var(--primary-hover); }
-
         .status-bar {
             width: 100%; display: flex; justify-content: space-between; margin-bottom: 12px;
             font-size: 0.85rem; font-weight: bold; background: var(--panel-bg);
@@ -243,7 +233,28 @@
             border: none; border-radius: 8px; font-size: 1rem; cursor: pointer; margin-top: 10px;
         }
 
-        @media (max-width: 600px) {
+        /* 📱 스마트폰 가로모드(Landscape) 초최적화 스타일 */
+        @media (max-height: 500px) and (orientation: landscape) {
+            header { padding: 4px 15px; }
+            header h1 { font-size: 0.95rem; }
+            main { padding: 6px 10px; }
+            .status-bar { margin-bottom: 6px; padding: 4px 10px; font-size: 0.75rem; }
+            .question-box { padding: 8px 10px; margin-bottom: 8px; }
+            .question-text { font-size: 1.25rem; margin-bottom: 1px; }
+            .sub-text { font-size: 0.8rem; }
+            .string-row { height: 24px; }
+            .fret-note { width: 17px; height: 17px; font-size: 0.6rem; }
+            .markers { height: 12px; margin-bottom: 1px; }
+            .dot { width: 7px; height: 7px; }
+            .controls { margin-top: 6px; gap: 6px; }
+            .btn { padding: 6px 15px; font-size: 0.85rem; max-width: 130px; }
+            
+            /* 음이름 선택 4지선다 격자 가로모드 압축 */
+            .choice-grid { margin-top: 6px; gap: 6px; }
+            .choice-btn { padding: 8px; font-size: 1rem; border-radius: 8px; }
+        }
+
+        @media (max-width: 600px) and (orientation: portrait) {
             .question-text { font-size: 1.4rem; }
             .btn { padding: 10px 15px; font-size: 0.95rem; }
             .gate-btn { padding: 20px; font-size: 1.1rem; }
@@ -268,38 +279,25 @@
             <p>강화하고자 하는 영역을 선택하세요.</p>
         </div>
         <div style="width: 100%; max-width: 500px;">
-            <button class="gate-btn" onclick="app.startNotePractice()">🔤 음이름 연습<span>영어 음이름 - 계이름 매칭 (중복 출제 전면 차단)</span></button>
+            <button class="gate-btn" onclick="app.startNotePractice()">🔤 음이름 연습<span>영어 음이름 - 계이름 매칭 (자동 다음 문제 전환)</span></button>
             <button class="gate-btn" onclick="app.showView('view-bass-menu')">🎸 베이스 기타<span>줄별 지판 암기, 음정(Interval) 훈련 및 이론</span></button>
-            <button class="gate-btn" onclick="app.showView('view-acoustic-menu')">🪵 어쿠스틱 기타<span>코드 폼 및 지판 암기 시스템 (준비 중)</span></button>
         </div>
     </main>
 
     <main id="view-bass-menu" class="view">
         <div style="text-align: center; margin-bottom: 10px;">
             <h2 style="color: var(--primary-color);">🎸 베이스 지판 트레이닝</h2>
-            <p>원하는 난이도와 모드를 선택하세요. (중복 문제 방지 적용)</p>
+            <p>원하는 난이도와 모드를 선택하세요. (2초 후 자동 이동 도입)</p>
         </div>
         <div class="menu-grid">
             <button class="menu-btn" onclick="app.startMode(1)">초급 모드<span>E, A현(4,3번줄) 자연음 찾기</span></button>
             <button class="menu-btn" onclick="app.startMode(2)">중급 모드<span>E, A현(4,3번줄) 자연음 + 샵(#)</span></button>
             <button class="menu-btn" onclick="app.startMode(3)">상급 모드<span>전체 현(E,A,D,G) 모든 음 찾기</span></button>
             <button class="menu-btn" onclick="app.startMode(4)">모든 위치 찾기<span>해당 음의 모든 지판 위치 클릭</span></button>
-            <button class="menu-btn" onclick="app.startMode(5)">타임 챌린지<span>60초 동안 지정된 줄의 음 맞추기</span></button>
             <button class="menu-btn" onclick="app.startMode(6)">음정(Interval) 훈련<span>루트음 기준 지정 음정 '모두' 찾기</span></button>
-            <button class="menu-btn" style="background-color: var(--secondary-color);" onclick="app.showView('view-edu')">📚 교육 탭 (이론)<span>베이스 기초 지식 및 음정 이론</span></button>
         </div>
         <div class="controls" style="margin-top: 20px;">
             <button class="btn outline" onclick="app.showView('view-main-gate')">메인으로 가기</button>
-        </div>
-    </main>
-
-    <main id="view-acoustic-menu" class="view">
-        <div class="question-box" style="margin-top: 40px;">
-            <div class="question-text">🪵 어쿠스틱 기타 훈련 준비 중</div>
-            <div class="sub-text" style="margin-top: 10px;">여기에 어쿠스틱 기타 관련 코드 및 지판 매칭 훈련을 곧 구현할 예정입니다. 편하게 코드 작업을 이어나가세요!</div>
-        </div>
-        <div class="controls">
-            <button class="btn" onclick="app.showView('view-main-gate')">메인으로 가기</button>
         </div>
     </main>
 
@@ -310,11 +308,11 @@
             <span id="note-progress">진행률: 1/10</span>
         </div>
         <div class="question-box">
-            <div class="sub-text" style="margin-bottom: 5px; font-weight: bold; color: var(--primary-color);">다음 영어 음이름에 맞는 계이름은?</div>
-            <div id="note-question-text" class="question-text" style="font-size: 3rem; letter-spacing: 2px;">C#</div>
+            <div class="sub-text" style="margin-bottom: 2px; font-weight: bold; color: var(--primary-color);">다음 영어 음이름에 맞는 계이름은?</div>
+            <div id="note-question-text" class="question-text" style="font-size: 2.2rem; letter-spacing: 2px;">C#</div>
         </div>
         <div class="choice-grid" id="note-choices-container"></div>
-        <div class="controls" style="margin-top: 20px;">
+        <div class="controls" style="margin-top: 15px;">
             <button class="btn outline" onclick="app.showView('view-main-gate')">중단하고 메인으로</button>
         </div>
     </main>
@@ -392,11 +390,9 @@
                 this.targetString = -1; 
                 this.targetTargets = [];
                 this.foundTargets = 0;
-                this.timeLeft = 0;
-                this.timerInterval = null;
                 this.isQuestionActive = false;
+                this.autoNextTimeout = null; // ⏱️ 타이머 관리 변수
                 
-                // 🔄 중복 출제 차단용 질문 큐 변수들
                 this.questionQueue = [];
                 
                 this.noteFormat = 'eng';
@@ -441,7 +437,7 @@
             applySettingsChange() {
                 this.renderFretboard();
                 if (this.isQuestionActive && this.currentMode !== 0) {
-                    if(this.currentMode !== 5) this.questionCount--; 
+                    this.questionCount--; 
                     this.generateQuestion();
                 }
             }
@@ -545,6 +541,7 @@
             }
 
             showView(viewId) {
+                if(this.autoNextTimeout) clearTimeout(this.autoNextTimeout);
                 document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
                 document.getElementById(viewId).classList.add('active');
             }
@@ -563,7 +560,7 @@
             }
 
             /* ========================================================
-               🔤 음이름 플래시 카드 세션 (비중복 보장형)
+               🔤 음이름 플래시 카드 세션 (2초 후 자동 이동)
                ======================================================== */
             startNotePractice() {
                 this.initAudio();
@@ -571,7 +568,6 @@
                 this.questionCount = 0;
                 this.currentMode = 0; 
                 
-                // 0~11 전체 음이름 후보 생성 후 셔플링
                 this.questionQueue = Array.from({length: 12}, (_, i) => i);
                 this.questionQueue.sort(() => Math.random() - 0.5);
 
@@ -580,6 +576,7 @@
             }
 
             generateNoteQuestion() {
+                if(this.autoNextTimeout) clearTimeout(this.autoNextTimeout);
                 this.questionCount++;
                 if (this.questionCount > this.maxQuestions || this.questionQueue.length === 0) {
                     document.getElementById('note-question-text').textContent = "훈련 완료!";
@@ -592,7 +589,6 @@
                 document.getElementById('note-progress').textContent = `진행률: ${this.questionCount}/${this.maxQuestions}`;
                 document.getElementById('note-score').textContent = `점수: ${this.score}`;
 
-                // 큐에서 앞에서부터 뽑아내어 중복을 완전히 봉쇄
                 this.targetPitch = this.questionQueue.shift();
                 
                 let questionNoteName = "";
@@ -661,22 +657,21 @@
                     this.playSound('correct');
                     clickedBtn.classList.add('correct');
                     this.score++;
-                    allButtons.forEach(btn => {
-                        if (correctAnswers.includes(btn.textContent)) btn.classList.add('correct');
-                    });
                 } else {
                     this.playSound('wrong');
                     clickedBtn.classList.add('wrong');
-                    allButtons.forEach(btn => {
-                        if (correctAnswers.includes(btn.textContent)) btn.classList.add('correct');
-                    });
                 }
 
-                setTimeout(() => this.generateNoteQuestion(), 1100);
+                allButtons.forEach(btn => {
+                    if (correctAnswers.includes(btn.textContent)) btn.classList.add('correct');
+                });
+
+                // ⏱️ 정답 표시 완료 후 2초 뒤 자동 진행
+                this.autoNextTimeout = setTimeout(() => this.generateNoteQuestion(), 2000);
             }
 
             /* ========================================================
-               🎸 베이스 지판 훈련 세션 (비중복 보장형 풀 관리)
+               🎸 베이스 지판 훈련 세션 (2초 후 자동 이동)
                ======================================================== */
             startMode(mode) {
                 this.initAudio();
@@ -686,93 +681,72 @@
                 this.clearFretboard();
                 document.getElementById('btn-next').style.display = 'none';
                 
-                const modeNames = ["", "초급 (E/A현 자연음)", "중급 (E/A현 샵)", "상급 (전체현 모든음)", "모든 위치 찾기", "타임 챌린지", "음정 훈련"];
+                const modeNames = ["", "초급 (E/A현 자연음)", "중급 (E/A현 샵)", "상급 (전체현 모든음)", "모든 위치 찾기", "", "음정 훈련"];
                 document.getElementById('ui-mode-name').textContent = modeNames[mode];
                 
-                // 🔄 [풀 조립 시스템] 모드 진입 시 중복 없는 콤보 풀을 미리 로드 후 셔플
                 this.questionQueue = [];
                 
                 if (mode === 1) {
-                    // 초급: E, A줄(0, 1) × 자연음 7개 = 총 14개 조합 생성
                     [0, 1].forEach(sId => {
                         naturalPitches.forEach(pitch => {
                             this.questionQueue.push({ stringId: sId, pitch: pitch });
                         });
                     });
                 } else if (mode === 2) {
-                    // 중급: E, A줄(0, 1) × 전체 12개 음 = 총 24개 조합 생성
                     [0, 1].forEach(sId => {
                         for(let p=0; p<12; p++) {
                             this.questionQueue.push({ stringId: sId, pitch: p });
                         }
                     });
-                } else if (mode === 3 || mode === 5) {
-                    // 상급 / 타임챌린지: 전체 4개 줄 × 전체 12개 음 = 총 48개 조합 생성
+                } else if (mode === 3) {
                     [0, 1, 2, 3].forEach(sId => {
                         for(let p=0; p<12; p++) {
                             this.questionQueue.push({ stringId: sId, pitch: p });
                         }
                     });
                 } else if (mode === 4) {
-                    // 모든 위치 찾기: 자연음 7개 단일 대상
                     naturalPitches.forEach(p => this.questionQueue.push({ pitch: p }));
                 } else if (mode === 6) {
-                    // 음정 훈련: 자연음 7개 단일 대상
                     naturalPitches.forEach(p => this.questionQueue.push({ pitch: p }));
                 }
 
-                // 무작위 순서 뒤섞기
                 this.questionQueue.sort(() => Math.random() - 0.5);
-
-                if (mode === 5) this.timeLeft = 60;
                 
                 this.showView('view-quiz');
-                if (mode === 5) this.startTimer();
                 this.generateQuestion();
             }
 
             generateQuestion() {
+                if(this.autoNextTimeout) clearTimeout(this.autoNextTimeout);
                 this.clearFretboard();
                 this.isQuestionActive = true;
                 this.targetString = -1;
                 document.getElementById('btn-next').style.display = 'none';
                 
-                if (this.currentMode !== 5) {
-                    this.questionCount++;
-                    // 10문제를 풀었거나 준비된 고유 문제가 다 소진되었을 때 종료
-                    if (this.questionCount > this.maxQuestions || this.questionQueue.length === 0) {
-                        this.isQuestionActive = false;
-                        document.getElementById('ui-question').textContent = "훈련 완료!";
-                        document.getElementById('ui-subtext').textContent = `최종 점수: ${this.score} / ${this.maxQuestions}`;
-                        return;
-                    }
-                } else {
-                    // 타임 챌린지의 경우 한바퀴 다 돌면(48문제 완주 시) 풀을 자동 재생산해 끊김 방지
-                    if(this.questionQueue.length === 0) {
-                        [0, 1, 2, 3].forEach(sId => { for(let p=0; p<12; p++) this.questionQueue.push({ stringId: sId, pitch: p }); });
-                        this.questionQueue.sort(() => Math.random() - 0.5);
-                    }
+                this.questionCount++;
+                if (this.questionCount > this.maxQuestions || this.questionQueue.length === 0) {
+                    this.isQuestionActive = false;
+                    document.getElementById('ui-question').textContent = "훈련 완료!";
+                    document.getElementById('ui-subtext').textContent = `최종 점수: ${this.score} / ${this.maxQuestions}`;
+                    return;
                 }
                 
-                if (this.currentMode !== 5) {
-                    document.getElementById('ui-score').textContent = `점수: ${this.score}`;
-                    document.getElementById('ui-progress').textContent = `진행률: ${this.questionCount}/${this.maxQuestions}`;
-                }
+                document.getElementById('ui-score').textContent = `점수: ${this.score}`;
+                document.getElementById('ui-progress').textContent = `진행률: ${this.questionCount}/${this.maxQuestions}`;
 
                 const qEl = document.getElementById('ui-question');
                 const subEl = document.getElementById('ui-subtext');
 
-                // 큐에서 단 하나만 무작위 구조체를 탈출(Pop)시켜 출제
                 const currentTask = this.questionQueue.shift();
 
-                if (this.currentMode === 1 || this.currentMode === 2 || this.currentMode === 3 || this.currentMode === 5) {
+                if (this.currentMode === 1 || this.currentMode === 2 || this.currentMode === 3) {
                     this.targetString = currentTask.stringId;
                     this.targetPitch = currentTask.pitch;
                     const stringObj = bassStrings.find(s => s.id === this.targetString);
                     const useFlat = Math.random() > 0.5 && accidentalPitches.includes(this.targetPitch);
                     
                     qEl.textContent = `${stringObj.name}현의 '${this.getNoteName(this.targetPitch, useFlat)}' 위치는?`;
-                    subEl.textContent = this.targetString === 0 || this.targetString === 1 ? "밝게 강조된 줄 안에서만 선택이 가능합니다." : "지정된 줄 안에서 정답 위치를 클릭하세요.";
+                    subEl.textContent = "알맞은 프렛 위치를 탭하세요.";
                 } else if (this.currentMode === 4) {
                     this.targetPitch = currentTask.pitch;
                     this.targetTargets = [];
@@ -789,7 +763,6 @@
                         { name: "4도", semitones: 5 }, { name: "5도", semitones: 7 },
                         { name: "6도", semitones: 9 }, { name: "7도", semitones: 11 }
                     ];
-                    // 고유 루트음별로 매번 하나의 인터벌이 매칭되도록 구성
                     const interval = intervals[Math.floor(Math.random() * intervals.length)];
                     this.targetPitch = (rootPitch + interval.semitones) % 12;
                     
@@ -820,6 +793,7 @@
                 if (!this.isQuestionActive) return;
                 if (this.targetString !== -1 && clickedString !== this.targetString) return; 
 
+                // 복수 지판 위치 찾기 모드 (모든 위치 찾기 / 음정 훈련)
                 if (this.currentMode === 4 || this.currentMode === 6) {
                     if (fretDiv.classList.contains('correct') || fretDiv.classList.contains('root-note')) return;
                     if (pitch === this.targetPitch) {
@@ -828,10 +802,12 @@
                         this.foundTargets++;
                         const remain = this.targetTargets.length - this.foundTargets;
                         document.getElementById('ui-subtext').textContent = `남은 개수: ${remain}개`;
+                        
                         if (remain === 0) {
                             this.score++; this.isQuestionActive = false;
-                            document.getElementById('ui-subtext').textContent = "완벽합니다!";
-                            setTimeout(() => this.generateQuestion(), 1000);
+                            document.getElementById('ui-subtext').textContent = "🎉 완벽합니다!";
+                            // ⏱️ 전부 다 찾으면 2초 뒤 자동 진행
+                            this.autoNextTimeout = setTimeout(() => this.generateQuestion(), 2000);
                         }
                     } else {
                         this.playSound('wrong'); this.showWrongTemp(fretDiv);
@@ -839,21 +815,23 @@
                     return;
                 }
 
+                // 단일 지판 위치 맞추기 모드 (초, 중, 상급 모드)
                 if (pitch === this.targetPitch && clickedString === this.targetString) {
                     this.playSound('correct'); fretDiv.classList.add('correct');
                     fretDiv.querySelector('.fret-note').textContent = notesSharp[pitch];
                     this.score++; this.isQuestionActive = false;
-                    document.getElementById('ui-subtext').textContent = "정답입니다!";
-                    if (this.currentMode === 5) setTimeout(() => this.generateQuestion(), 400);
-                    else document.getElementById('btn-next').style.display = 'block';
+                    document.getElementById('ui-subtext').textContent = "⭕ 정답입니다!";
+                    
+                    // ⏱️ 정답 시 2초 후 자동 이동
+                    this.autoNextTimeout = setTimeout(() => this.generateQuestion(), 2000);
                 } else {
                     this.playSound('wrong'); this.showWrongTemp(fretDiv);
-                    if (this.currentMode !== 5) {
-                        this.isQuestionActive = false;
-                        document.getElementById('ui-subtext').textContent = "오답입니다. 힌트 위치를 확인하세요.";
-                        this.showHints(this.targetPitch, this.targetString);
-                        document.getElementById('btn-next').style.display = 'block';
-                    }
+                    this.isQuestionActive = false;
+                    document.getElementById('ui-subtext').textContent = "❌ 오답! 주황색 힌트 확인";
+                    this.showHints(this.targetPitch, this.targetString);
+                    
+                    // ⏱️ 오답이어도 지판에 정답 위치(힌트)를 2초 보여준 뒤 자동 이동
+                    this.autoNextTimeout = setTimeout(() => this.generateQuestion(), 2000);
                 }
             }
 
