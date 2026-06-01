@@ -237,6 +237,12 @@
             .fret-note { width: 20px; height: 20px; font-size: 0.65rem; } 
             .string-row { height: 32px; }
         }
+
+        /* 반주 훈련장에서는 서서히 꺼지는 잔상 효과를 제거 (즉각 깜빡임) */
+        #comping-fretboard .fret-note, 
+        #comping-fretboard .string-row {
+            transition: none !important;
+        }
     </style>
 </head>
 <body>
@@ -750,7 +756,7 @@
             { b: 16, s: 1, f: 5 }, { b: 17.75, s: 1, f: 5 }, { b: 18.50, s: 1, f: 5, mute: true }, { b: 18.75, s: 1, f: 5 }, { b: 19.50, s: 0, f: 1 }, { b: 19.75, s: 0, f: 2 },
             { b: 20, s: 0, f: 3 }, { b: 20.5, s: 0, f: 3 }, { b: 21.75, s: 0, f: 3 }, { b: 22.50, s: 0, f: 3, mute: true }, { b: 22.75, s: 0, f: 3 }, { b: 23.50, s: 1, f: 5 }, { b: 23.75, s: 1, f: 4 },
             { b: 24, s: 1, f: 3 }, { b: 25.75, s: 1, f: 3 }, { b: 26.50, s: 1, f: 3, mute: true }, { b: 26.75, s: 1, f: 3, dur: 0.8 },
-            { b: 28, s: 1, f: 3 }, { b: 29.75, s: 1, f: 3 }, { b: 30.50, s: 1, f: 3, mute: true }, { b: 30.75, s: 1, f: 3 }, { b: 31.50, s: 1, f: 3 }, { b: 31.75, s: 1, f: 4 }
+            { b: 28, s: 1, f: 3 }, { b: 29.75, s: 1, f: 3 }, { b: 30.50, s: 1, f: 3, mute: true }, { b: 30.75, s: 1, f: 3 }, { b: 31.50, s: 1, f: 3 }, { b: 31.75, s: 1, f: 4 }, { b: 32, s: 1, f: 4, dur: 1 }
         ];
 
         function startCompingPractice() {
@@ -786,7 +792,7 @@
             const currentMusicSec = audio.currentTime; 
             
             // 1초 딜레이 적용
-            const offsetSec = 2.67; 
+            const offsetSec = 2.7; 
             const currentBeat = (currentMusicSec - offsetSec) * (baseBpm / 60);
 
             document.querySelectorAll('#comping-fretboard .fret').forEach(f => {
