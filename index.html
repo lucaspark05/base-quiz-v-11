@@ -753,7 +753,7 @@
             
             const audio = document.getElementById('comping-audio');
             if(!audio) return;
-
+        
             isCompingPlaying = true;
             audio.playbackRate = compingPlaybackRate;
             audio.currentTime = 0;
@@ -764,11 +764,12 @@
             });
             
             const beatDuration = (60 / baseBpm) / compingPlaybackRate; 
-
+        
             doubleChromaticPattern.forEach(note => {
-                const delayMs = note.b * beatDuration * 1000;
+                // 💡 기존 코드에 2700ms(2.7초)를 더해 딜레이를 줍니다.
+                const delayMs = (note.b * beatDuration * 1000) + 2700;
                 const animDuration = (note.mute ? 0.2 : 0.4) * beatDuration * 1000;
-
+        
                 const timeoutId = setTimeout(() => {
                     if (!isCompingPlaying) return;
                     
