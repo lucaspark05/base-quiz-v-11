@@ -659,14 +659,14 @@
                     subEl.textContent = "지정된 줄 안에서 정답 위치를 클릭하세요.";
                 } else if (this.currentMode === 4) {
                     this.targetPitch = currentTask.pitch; this.targetTargets = [];
-                    document.querySelectorAll('.fret').forEach(f => { if (parseInt(f.dataset.pitch) === this.targetPitch) this.targetTargets.push(f); });
+                    document.querySelectorAll('#fretboard .fret').forEach(f => { if (parseInt(f.dataset.pitch) === this.targetPitch) this.targetTargets.push(f); });
                     this.foundTargets = 0; qEl.textContent = `모든 '${this.getNoteName(this.targetPitch)}' 찾기`;
                     subEl.textContent = `남은 개수: ${this.targetTargets.length}개`;
                 } else if (this.currentMode === 6) {
                     const rootPitch = currentTask.pitch; const intervals = [{name:"2도", semitones:2}, {name:"3도", semitones:4}, {name:"4도", semitones:5}, {name:"5도", semitones:7}];
                     const interval = intervals[Math.floor(Math.random() * intervals.length)];
                     this.targetPitch = (rootPitch + interval.semitones) % 12; this.targetTargets = [];
-                    document.querySelectorAll('.fret').forEach(f => {
+                    document.querySelectorAll('#fretboard .fret').forEach(f => {
                         const pitch = parseInt(f.dataset.pitch);
                         if (pitch === this.targetPitch) this.targetTargets.push(f);
                         else if (pitch === rootPitch) { f.classList.add('root-note'); f.querySelector('.fret-note').textContent = notesSharp[rootPitch]; }
@@ -709,7 +709,7 @@
                 } else {
                     this.playSound('wrong'); this.showWrongTemp(fretDiv);
                     this.isQuestionActive = false; document.getElementById('btn-next').style.display = 'block'; 
-                    document.querySelectorAll('.fret').forEach(f => {
+                    document.querySelectorAll('#fretboard .fret').forEach(f => {
                         if (parseInt(f.dataset.pitch) === this.targetPitch && (this.targetString === -1 || parseInt(f.dataset.string) === this.targetString)) {
                             f.classList.add('hint'); f.querySelector('.fret-note').textContent = notesSharp[this.targetPitch];
                         }
