@@ -570,10 +570,10 @@
                 // 수정 완료: 화면 전환 시 지판, 애니메이션 상태 등을 완전히 초기화
                 this.clearFretboard(); 
                 
-                // 💡 [추가] 모드 전환 시 이전 퀴즈 딜레이 및 실행 상태 완벽 초기화
+                // 💡 [추가] 모드 전환 시 뒤늦게 실행되는 백그라운드 타이머 강제 종료
                 clearTimeout(this.nextTimeout);
                 this.isQuestionActive = false;
-                
+
                 if (typeof stopCompingPractice === 'function') stopCompingPractice();
 
                 document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
@@ -652,10 +652,10 @@
             }
 
             startMode(mode) {
-                // 💡 [추가] 모드 시작 시 기존 상태 강제 리셋 (타임 챌린지 등 꼬임 방지)
+                // 💡 [추가] 모드 시작 시 기존 타이머 및 퀴즈 활성 상태 강제 리셋
                 clearTimeout(this.nextTimeout);
                 this.isQuestionActive = false;
-                
+
                 this.initAudio(); this.currentMode = mode; this.score = 0; this.questionCount = 0;
                 this.clearFretboard(); document.getElementById('btn-next').style.display = 'none';
                 const modeNames = ["", "초급 (E/A현 자연음)", "중급 (E/A현 샵)", "상급 (전체현 모든음)", "모든 위치 찾기", "타임 챌린지", "음정 훈련"];
@@ -664,7 +664,13 @@
                 if (mode === 1) [0, 1].forEach(sId => naturalPitches.forEach(pitch => this.questionQueue.push({ stringId: sId, pitch: pitch })));
                 else if (mode === 2) [0, 1].forEach(sId => { for(let p=0; p<12; p++) this.questionQueue.push({ stringId: sId, pitch: p }); });
                 else if (mode === 3 || mode === 5) [0, 1, 2, 3].forEach(sId => { for(let p=0; p<12; p++) this.questionQueue.push({ stringId: sId, pitch: p }); });
-                else if (mode === 4 || mode === 6) naturalPitches.forEach(p => this.questionQueue.push({ pitch: p }));
+                else if (mode === 4 || mode === 6) {
+                    // 💡 [수정] 자연음 7개로는 10문제를 못 채우므로, 넉넉하게 20개의 랜덤 질문을 생성하여 큐에 삽입
+                    for (let i = 0; i < 20; i++) {
+                        const randomPitch = naturalPitches[Math.floor(Math.random() * naturalPitches.length)];
+                        this.questionQueue.push({ pitch: randomPitch });
+                    }
+                }
                 this.questionQueue.sort(() => Math.random() - 0.5);
                 this.showView('view-quiz'); this.generateQuestion();
             }
@@ -679,6 +685,10 @@
                     }
                     document.getElementById('ui-score').textContent = `점수: ${this.score}`;
                     document.getElementById('ui-progress').textContent = `진행률: ${this.questionCount}/${this.maxQuestions}`;
+                } else {
+                    // 💡 [추가] 모드 5(타임 챌린지)일 때 이전 모드의 UI 잔상이 남지 않도록 강제 초기화
+                    document.getElementById('ui-score').textContent = `점수: ${this.score}`;
+                    document.getElementById('ui-progress').textContent = `타임어택 진행 중!`;
                 }
                 const qEl = document.getElementById('ui-question'); const subEl = document.getElementById('ui-subtext');
                 const currentTask = this.questionQueue.shift();
@@ -696,7 +706,7 @@
                     subEl.textContent = `남은 개수: ${this.targetTargets.length}개`;
                 } else if (this.currentMode === 6) {
                     const rootPitch = currentTask.pitch; 
-                    // 💡 [수정] 6도, 7도, b7도(단7도) 추가!
+                    // 💡 [수정] 6도, 7도, ♭7도 규칙 목록 확장!
                     const intervals = [
                         {name:"2도", semitones:2}, {name:"3도", semitones:4}, {name:"4도", semitones:5}, {name:"5도", semitones:7},
                         {name:"6도", semitones:9}, {name:"7도", semitones:11}, {name:"♭7도", semitones:10}
