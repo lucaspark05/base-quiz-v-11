@@ -186,6 +186,14 @@
             font-weight: bold; color: transparent; transition: all 0.15s; z-index: 3; flex-shrink: 0; 
         }
 
+        /* 💡 반주 연습장 지판 잔상 제거용 스코프 분리 설정 */
+        #comping-fretboard .fret-note {
+            transition: none !important;
+        }
+        #comping-fretboard .string-row {
+            transition: none !important;
+        }
+
         .fret.correct .fret-note { background-color: var(--correct-color); color: #fff; box-shadow: 0 0 6px var(--correct-color); }
         .fret.wrong .fret-note { background-color: var(--wrong-color); color: #fff; animation: shake 0.3s; }
         .fret.hint .fret-note { background-color: #ff9800; color: #fff; }
@@ -236,12 +244,6 @@
             .gate-btn { padding: 20px; font-size: 1.1rem; }
             .fret-note { width: 20px; height: 20px; font-size: 0.65rem; } 
             .string-row { height: 32px; }
-        }
-
-        /* 반주 훈련장에서는 서서히 꺼지는 잔상 효과를 제거 (즉각 깜빡임) */
-        #comping-fretboard .fret-note, 
-        #comping-fretboard .string-row {
-            transition: none !important;
         }
     </style>
 </head>
@@ -356,7 +358,7 @@
             </div>
             
             <div style="margin-top: 20px; border-top: 1px dashed #ccc; padding-top: 15px;">
-                <audio id="comping-audio" preload="auto" src="double-chromatic.mp3"></audio>
+                <audio id="comping-audio" preload="auto" src="더블 크로매틱.mp3"></audio>
                 <button id="play-btn" class="btn" onclick="startCompingPractice()" style="width: 100%; max-width: 300px; padding: 15px; font-size: 1.1rem;">▶️ 재생 (버튼 누르면 바로 시작)</button>
             </div>
         </div>
@@ -557,13 +559,14 @@
             closeSettings() { document.getElementById('settings-modal').style.display = 'none'; }
             
             clearFretboard() {
-                document.querySelectorAll('.fret').forEach(f => {
+                // 💡 퀴즈판 청소 범위를 확실하게 #fretboard 내부로 특정함
+                document.querySelectorAll('#fretboard .fret').forEach(f => {
                     f.classList.remove('correct', 'wrong', 'hint', 'root-note');
                     f.querySelector('.fret-note').textContent = ''; 
                 });
                 const fb = document.getElementById('fretboard');
                 if (fb) fb.classList.remove('has-highlight');
-                document.querySelectorAll('.string-row').forEach(row => row.classList.remove('highlighted'));
+                document.querySelectorAll('#fretboard .string-row').forEach(row => row.classList.remove('highlighted'));
             }
 
             startNotePractice() {
@@ -659,14 +662,16 @@
                     subEl.textContent = "지정된 줄 안에서 정답 위치를 클릭하세요.";
                 } else if (this.currentMode === 4) {
                     this.targetPitch = currentTask.pitch; this.targetTargets = [];
-                    document.querySelectorAll('.fret').forEach(f => { if (parseInt(f.dataset.pitch) === this.targetPitch) this.targetTargets.push(f); });
+                    // 💡 셀렉터를 퀴즈용 지판(#fretboard .fret)으로 한정하여 개수 뻥튀기 방지
+                    document.querySelectorAll('#fretboard .fret').forEach(f => { if (parseInt(f.dataset.pitch) === this.targetPitch) this.targetTargets.push(f); });
                     this.foundTargets = 0; qEl.textContent = `모든 '${this.getNoteName(this.targetPitch)}' 찾기`;
                     subEl.textContent = `남은 개수: ${this.targetTargets.length}개`;
                 } else if (this.currentMode === 6) {
                     const rootPitch = currentTask.pitch; const intervals = [{name:"2도", semitones:2}, {name:"3도", semitones:4}, {name:"4도", semitones:5}, {name:"5도", semitones:7}];
                     const interval = intervals[Math.floor(Math.random() * intervals.length)];
                     this.targetPitch = (rootPitch + interval.semitones) % 12; this.targetTargets = [];
-                    document.querySelectorAll('.fret').forEach(f => {
+                    // 💡 셀렉터를 퀴즈용 지판으로 제한하여 반주 훈련장 오염 및 카운팅 버그 완전 처단
+                    document.querySelectorAll('#fretboard .fret').forEach(f => {
                         const pitch = parseInt(f.dataset.pitch);
                         if (pitch === this.targetPitch) this.targetTargets.push(f);
                         else if (pitch === rootPitch) { f.classList.add('root-note'); f.querySelector('.fret-note').textContent = notesSharp[rootPitch]; }
@@ -709,7 +714,8 @@
                 } else {
                     this.playSound('wrong'); this.showWrongTemp(fretDiv);
                     this.isQuestionActive = false; document.getElementById('btn-next').style.display = 'block'; 
-                    document.querySelectorAll('.fret').forEach(f => {
+                    // 💡 오답 시 가이드를 띄우는 힌트 셀렉터도 복사된 지판에 영향 없게 수정
+                    document.querySelectorAll('#fretboard .fret').forEach(f => {
                         if (parseInt(f.dataset.pitch) === this.targetPitch && (this.targetString === -1 || parseInt(f.dataset.string) === this.targetString)) {
                             f.classList.add('hint'); f.querySelector('.fret-note').textContent = notesSharp[this.targetPitch];
                         }
@@ -727,7 +733,6 @@
         // ==========================================
         // 반주법 (더블 크로매틱 어프로치) 전용 로직
         // ==========================================
-        
         const baseBpm = 95;
         let compingPlaybackRate = 1.0;
         let isCompingPlaying = false;
@@ -740,91 +745,73 @@
             if(audio) audio.playbackRate = rate;
         }
 
-        // 💡 특정 노트에 dur(유지 박자 길이) 속성이 추가되었습니다.
         const doubleChromaticPattern = [
-            // [1주기: 1~4마디]
-            // 1마디
             { b: 0, s: 1, f: 5 }, { b: 1.75, s: 1, f: 5 }, { b: 2.50, s: 1, f: 5, mute: true }, { b: 2.75, s: 1, f: 5 }, { b: 3.50, s: 0, f: 1 }, { b: 3.75, s: 0, f: 2 },
-            // 2마디
             { b: 4, s: 0, f: 3 }, { b: 4.5, s: 0, f: 3 }, { b: 5.75, s: 0, f: 3 }, { b: 6.50, s: 0, f: 3, mute: true }, { b: 6.75, s: 0, f: 3 }, { b: 7.50, s: 1, f: 5 }, { b: 7.75, s: 1, f: 4 },
-            // 3마디
-            { b: 8, s: 1, f: 3 }, { b: 9.75, s: 1, f: 3 }, { b: 10.50, s: 1, f: 3, mute: true }, { b: 10.75, s: 1, f: 3, dur: 0.8 },
-            // 4마디
+            { b: 8, s: 1, f: 3 }, { b: 9.75, s: 1, f: 3 }, { b: 10.50, s: 1, f: 3, mute: true }, { b: 10.75, s: 1, f: 3 }, { b: 11, s: 1, f: 3 },
             { b: 12, s: 1, f: 3 }, { b: 13.75, s: 1, f: 3 }, { b: 14.50, s: 1, f: 3, mute: true }, { b: 14.75, s: 1, f: 3 }, { b: 15.50, s: 1, f: 3 }, { b: 15.75, s: 1, f: 4 },
-
-            // [2주기: 5~8마디 (위 패턴에서 박자(b)에 정확히 +16)]
             { b: 16, s: 1, f: 5 }, { b: 17.75, s: 1, f: 5 }, { b: 18.50, s: 1, f: 5, mute: true }, { b: 18.75, s: 1, f: 5 }, { b: 19.50, s: 0, f: 1 }, { b: 19.75, s: 0, f: 2 },
             { b: 20, s: 0, f: 3 }, { b: 20.5, s: 0, f: 3 }, { b: 21.75, s: 0, f: 3 }, { b: 22.50, s: 0, f: 3, mute: true }, { b: 22.75, s: 0, f: 3 }, { b: 23.50, s: 1, f: 5 }, { b: 23.75, s: 1, f: 4 },
-            { b: 24, s: 1, f: 3 }, { b: 25.75, s: 1, f: 3 }, { b: 26.50, s: 1, f: 3, mute: true }, { b: 26.75, s: 1, f: 3, dur: 0.8 },
+            { b: 24, s: 1, f: 3 }, { b: 25.75, s: 1, f: 3 }, { b: 26.50, s: 1, f: 3, mute: true }, { b: 26.75, s: 1, f: 3 }, { b: 27, s: 1, f: 3 },
             { b: 28, s: 1, f: 3 }, { b: 29.75, s: 1, f: 3 }, { b: 30.50, s: 1, f: 3, mute: true }, { b: 30.75, s: 1, f: 3 }, { b: 31.50, s: 1, f: 3 }, { b: 31.75, s: 1, f: 4 }, { b: 32, s: 1, f: 5, dur: 1 }
         ];
 
+        // 💡 끊겨있던 반주 재생 및 정지/애니메이션 함수 완벽 보강 구현
         function startCompingPractice() {
             stopCompingPractice();
             const audio = document.getElementById('comping-audio');
-
+            if(!audio) return;
+            
             isCompingPlaying = true;
             audio.playbackRate = compingPlaybackRate;
             audio.currentTime = 0;
 
             audio.play().catch(e => console.log("Audio play error:", e));
-            compingAnimationId = requestAnimationFrame(updateCompingFretboard);
+            animateComping();
         }
 
         function stopCompingPractice() {
             isCompingPlaying = false;
+            const audio = document.getElementById('comping-audio');
+            if (audio) { audio.pause(); audio.currentTime = 0; }
             cancelAnimationFrame(compingAnimationId);
             
-            const audio = document.getElementById('comping-audio');
-            if(audio) {
-                audio.pause(); audio.currentTime = 0;
-            }
             document.querySelectorAll('#comping-fretboard .fret').forEach(f => {
                 f.classList.remove('anim-active', 'anim-mute');
-                f.querySelector('.fret-note').textContent = '';
             });
         }
 
-        function updateCompingFretboard() {
-            if(!isCompingPlaying) return;
-            
+        function animateComping() {
+            if (!isCompingPlaying) return;
             const audio = document.getElementById('comping-audio');
-            const currentMusicSec = audio.currentTime; 
-            
-            // 1초 딜레이 적용
-            const offsetSec = 2.7; 
-            const currentBeat = (currentMusicSec - offsetSec) * (baseBpm / 60);
+            if(!audio) return;
+
+            const beatDuration = 60 / baseBpm;
+            const currentBeat = audio.currentTime / beatDuration;
 
             document.querySelectorAll('#comping-fretboard .fret').forEach(f => {
                 f.classList.remove('anim-active', 'anim-mute');
-                f.querySelector('.fret-note').textContent = '';
             });
 
-            doubleChromaticPattern.forEach(note => {
-                // 💡 박자 단위로 쿨타임을 관리합니다. 지정된 dur가 있으면 그 길이만큼, 없으면 기본값 사용.
-                let duration = note.mute ? 0.15 : 0.20; 
-                if (note.dur) duration = note.dur; // 직접 지정한 박자 길이 (예: 1.25)
-
-                if (currentBeat >= note.b && currentBeat < note.b + duration) {
-                    const fretRow = document.querySelector(`#comping-fretboard .string-row[data-string="${note.s}"]`);
-                    if(fretRow) {
-                        const targetFret = fretRow.querySelector(`.fret[data-fret="${note.f}"]`);
-                        if(targetFret) {
-                            if (note.mute) {
-                                targetFret.classList.add('anim-mute');
-                                targetFret.querySelector('.fret-note').textContent = 'X';
-                            } else {
-                                targetFret.classList.add('anim-active');
-                                targetFret.querySelector('.fret-note').textContent = notesSharp[targetFret.dataset.pitch];
-                            }
-                        }
-                    }
+            let activeNote = null;
+            for (let i = 0; i < doubleChromaticPattern.length; i++) {
+                const note = doubleChromaticPattern[i];
+                if (currentBeat >= note.b && currentBeat < note.b + 0.35) {
+                    activeNote = note;
                 }
-            });
+            }
 
-            if (!audio.paused && !audio.ended) {
-                compingAnimationId = requestAnimationFrame(updateCompingFretboard);
-            } else if (audio.ended) {
+            if (activeNote) {
+                const targetFret = document.querySelector(`#comping-fretboard .fret[data-string="${activeNote.s}"][data-fret="${activeNote.f}"]`);
+                if (targetFret) {
+                    if (activeNote.mute) targetFret.classList.add('anim-mute');
+                    else targetFret.classList.add('anim-active');
+                }
+            }
+
+            if (!audio.ended) {
+                compingAnimationId = requestAnimationFrame(animateComping);
+            } else {
                 stopCompingPractice();
             }
         }
