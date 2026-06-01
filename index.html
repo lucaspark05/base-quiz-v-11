@@ -569,6 +569,11 @@
             showView(viewId) {
                 // 수정 완료: 화면 전환 시 지판, 애니메이션 상태 등을 완전히 초기화
                 this.clearFretboard(); 
+                
+                // 💡 [추가] 모드 전환 시 이전 퀴즈 딜레이 및 실행 상태 완벽 초기화
+                clearTimeout(this.nextTimeout);
+                this.isQuestionActive = false;
+                
                 if (typeof stopCompingPractice === 'function') stopCompingPractice();
 
                 document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
@@ -647,6 +652,10 @@
             }
 
             startMode(mode) {
+                // 💡 [추가] 모드 시작 시 기존 상태 강제 리셋 (타임 챌린지 등 꼬임 방지)
+                clearTimeout(this.nextTimeout);
+                this.isQuestionActive = false;
+                
                 this.initAudio(); this.currentMode = mode; this.score = 0; this.questionCount = 0;
                 this.clearFretboard(); document.getElementById('btn-next').style.display = 'none';
                 const modeNames = ["", "초급 (E/A현 자연음)", "중급 (E/A현 샵)", "상급 (전체현 모든음)", "모든 위치 찾기", "타임 챌린지", "음정 훈련"];
@@ -686,7 +695,12 @@
                     this.foundTargets = 0; qEl.textContent = `모든 '${this.getNoteName(this.targetPitch)}' 찾기`;
                     subEl.textContent = `남은 개수: ${this.targetTargets.length}개`;
                 } else if (this.currentMode === 6) {
-                    const rootPitch = currentTask.pitch; const intervals = [{name:"2도", semitones:2}, {name:"3도", semitones:4}, {name:"4도", semitones:5}, {name:"5도", semitones:7}];
+                    const rootPitch = currentTask.pitch; 
+                    // 💡 [수정] 6도, 7도, b7도(단7도) 추가!
+                    const intervals = [
+                        {name:"2도", semitones:2}, {name:"3도", semitones:4}, {name:"4도", semitones:5}, {name:"5도", semitones:7},
+                        {name:"6도", semitones:9}, {name:"7도", semitones:11}, {name:"♭7도", semitones:10}
+                    ];
                     const interval = intervals[Math.floor(Math.random() * intervals.length)];
                     this.targetPitch = (rootPitch + interval.semitones) % 12; this.targetTargets = [];
                     // 수정 완료: 오직 #fretboard에서만 정답 카운팅 및 루트음 표시
