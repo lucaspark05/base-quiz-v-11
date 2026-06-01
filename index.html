@@ -570,8 +570,9 @@
                 // 수정 완료: 화면 전환 시 지판, 애니메이션 상태 등을 완전히 초기화
                 this.clearFretboard(); 
                 
-                // 💡 [추가] 모드 전환 시 뒤늦게 실행되는 백그라운드 타이머 강제 종료
+                // 💡 [수정] 모드 전환 시 뒤늦게 실행되는 타이머 및 타임어택 인터벌 모두 강제 종료
                 clearTimeout(this.nextTimeout);
+                clearInterval(this.timerInterval); 
                 this.isQuestionActive = false;
 
                 if (typeof stopCompingPractice === 'function') stopCompingPractice();
@@ -652,8 +653,9 @@
             }
 
             startMode(mode) {
-                // 💡 [추가] 모드 시작 시 기존 타이머 및 퀴즈 활성 상태 강제 리셋
+                // 💡 [수정] 모드 시작 시 기존 타이머, 타임어택 인터벌 및 퀴즈 활성 상태 강제 리셋
                 clearTimeout(this.nextTimeout);
+                clearInterval(this.timerInterval);
                 this.isQuestionActive = false;
 
                 this.initAudio(); this.currentMode = mode; this.score = 0; this.questionCount = 0;
@@ -665,16 +667,36 @@
                 else if (mode === 2) [0, 1].forEach(sId => { for(let p=0; p<12; p++) this.questionQueue.push({ stringId: sId, pitch: p }); });
                 else if (mode === 3 || mode === 5) [0, 1, 2, 3].forEach(sId => { for(let p=0; p<12; p++) this.questionQueue.push({ stringId: sId, pitch: p }); });
                 else if (mode === 4 || mode === 6) {
-                    // 💡 [수정] 자연음 7개로는 10문제를 못 채우므로, 넉넉하게 20개의 랜덤 질문을 생성하여 큐에 삽입
                     for (let i = 0; i < 20; i++) {
                         const randomPitch = naturalPitches[Math.floor(Math.random() * naturalPitches.length)];
                         this.questionQueue.push({ pitch: randomPitch });
                     }
                 }
                 this.questionQueue.sort(() => Math.random() - 0.5);
+
+                // 💡 [추가] 모드 5(타임 챌린지) 전용 60초 타이머 실시간 구동
+                if (mode === 5) {
+                    this.timeLeft = 60;
+                    document.getElementById('ui-progress').textContent = `남은 시간: ${this.timeLeft}초`;
+                    
+                    this.timerInterval = setInterval(() => {
+                        this.timeLeft--;
+                        document.getElementById('ui-progress').textContent = `남은 시간: ${this.timeLeft}초`;
+                        
+                        // 0초가 되면 퀴즈를 즉시 종료
+                        if (this.timeLeft <= 0) {
+                            clearInterval(this.timerInterval);
+                            this.isQuestionActive = false;
+                            document.getElementById('ui-question').textContent = "⏱️ 시간 종료! 훈련 완료!";
+                            document.getElementById('ui-subtext').textContent = `최종 점수: ${this.score}점`;
+                            document.getElementById('btn-next').style.display = 'none';
+                        }
+                    }, 1000);
+                }
+
                 this.showView('view-quiz'); this.generateQuestion();
             }
-
+            
             generateQuestion() {
                 clearTimeout(this.nextTimeout); this.clearFretboard(); this.isQuestionActive = true; this.targetString = -1;
                 document.getElementById('btn-next').style.display = 'none';
@@ -686,9 +708,8 @@
                     document.getElementById('ui-score').textContent = `점수: ${this.score}`;
                     document.getElementById('ui-progress').textContent = `진행률: ${this.questionCount}/${this.maxQuestions}`;
                 } else {
-                    // 💡 [추가] 모드 5(타임 챌린지)일 때 이전 모드의 UI 잔상이 남지 않도록 강제 초기화
+                    // 💡 [수정] 모드 5일 때는 인터벌 타이머가 ui-progress를 그리고 있으므로, 점수만 업데이트하고 진행률 글자는 건드리지 않습니다.
                     document.getElementById('ui-score').textContent = `점수: ${this.score}`;
-                    document.getElementById('ui-progress').textContent = `타임어택 진행 중!`;
                 }
                 const qEl = document.getElementById('ui-question'); const subEl = document.getElementById('ui-subtext');
                 const currentTask = this.questionQueue.shift();
@@ -700,20 +721,17 @@
                     subEl.textContent = "지정된 줄 안에서 정답 위치를 클릭하세요.";
                 } else if (this.currentMode === 4) {
                     this.targetPitch = currentTask.pitch; this.targetTargets = [];
-                    // 수정 완료: 오직 #fretboard에서만 정답 카운팅
                     document.querySelectorAll('#fretboard .fret').forEach(f => { if (parseInt(f.dataset.pitch) === this.targetPitch) this.targetTargets.push(f); });
                     this.foundTargets = 0; qEl.textContent = `모든 '${this.getNoteName(this.targetPitch)}' 찾기`;
                     subEl.textContent = `남은 개수: ${this.targetTargets.length}개`;
                 } else if (this.currentMode === 6) {
                     const rootPitch = currentTask.pitch; 
-                    // 💡 [수정] 6도, 7도, ♭7도 규칙 목록 확장!
                     const intervals = [
                         {name:"2도", semitones:2}, {name:"3도", semitones:4}, {name:"4도", semitones:5}, {name:"5도", semitones:7},
                         {name:"6도", semitones:9}, {name:"7도", semitones:11}, {name:"♭7도", semitones:10}
                     ];
                     const interval = intervals[Math.floor(Math.random() * intervals.length)];
                     this.targetPitch = (rootPitch + interval.semitones) % 12; this.targetTargets = [];
-                    // 수정 완료: 오직 #fretboard에서만 정답 카운팅 및 루트음 표시
                     document.querySelectorAll('#fretboard .fret').forEach(f => {
                         const pitch = parseInt(f.dataset.pitch);
                         if (pitch === this.targetPitch) this.targetTargets.push(f);
