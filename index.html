@@ -166,21 +166,13 @@
         .string-row[data-string="1"]::before { height: 3.5px; } 
         .string-row[data-string="0"]::before { height: 4.5px; } 
 
-        .fretboard.has-highlight .string-row:not(.highlighted) {
-            opacity: 0.25; 
-        }
-        .string-row.highlighted {
-            background-color: rgba(255, 255, 255, 0.15);
-            box-shadow: inset 0 0 15px rgba(255, 255, 255, 0.2);
-        }
-        [data-theme="dark"] .string-row.highlighted {
-            background-color: rgba(255, 255, 255, 0.08);
-        }
+        .fretboard.has-highlight .string-row:not(.highlighted) { opacity: 0.25; }
+        .string-row.highlighted { background-color: rgba(255, 255, 255, 0.15); box-shadow: inset 0 0 15px rgba(255, 255, 255, 0.2); }
+        [data-theme="dark"] .string-row.highlighted { background-color: rgba(255, 255, 255, 0.08); }
 
         .fret {
             flex: 1; border-right: 2px solid var(--fret-color); position: relative;
-            display: flex; justify-content: center; align-items: center; cursor: pointer; z-index: 2;
-            min-width: 0; 
+            display: flex; justify-content: center; align-items: center; cursor: pointer; z-index: 2; min-width: 0; 
         }
         .fret.nut { flex: 0.5; background-color: #2c2c2c; border-right: 4px solid #1a1a1a; }
 
@@ -191,14 +183,18 @@
         .fret-note {
             width: 24px; height: 24px; border-radius: 50%; background-color: transparent;
             display: flex; justify-content: center; align-items: center; font-size: 0.75rem;
-            font-weight: bold; color: transparent; transition: all 0.15s; z-index: 3;
-            flex-shrink: 0; 
+            font-weight: bold; color: transparent; transition: all 0.15s; z-index: 3; flex-shrink: 0; 
         }
 
         .fret.correct .fret-note { background-color: var(--correct-color); color: #fff; box-shadow: 0 0 6px var(--correct-color); }
         .fret.wrong .fret-note { background-color: var(--wrong-color); color: #fff; animation: shake 0.3s; }
         .fret.hint .fret-note { background-color: #ff9800; color: #fff; }
         .fret.root-note .fret-note { background-color: var(--root-color); color: #fff; box-shadow: 0 0 6px var(--root-color); opacity: 0.9; }
+        
+        /* 반주 애니메이션 강조 색상 */
+        .fret.anim-active .fret-note { background-color: #ffeb3b; color: #000; box-shadow: 0 0 10px #ffeb3b; transform: scale(1.1); }
+        /* 뮤트 애니메이션 강조 색상 */
+        .fret.anim-mute .fret-note { background-color: #9e9e9e; color: #fff; box-shadow: 0 0 8px rgba(158, 158, 158, 0.8); font-weight: 900; }
 
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
@@ -213,6 +209,7 @@
             transition: background-color 0.2s; box-shadow: 0 4px 6px var(--shadow); flex: 1; max-width: 180px;
         }
         .btn:hover { background-color: var(--primary-hover); }
+        .btn:disabled { background-color: #ccc; cursor: not-allowed; box-shadow: none; }
         .btn.outline { background-color: transparent; border: 2px solid var(--primary-color); color: var(--primary-color); }
         .btn.outline:hover { background-color: var(--secondary-color); }
 
@@ -258,8 +255,8 @@
             <p>강화하고자 하는 영역을 선택하세요.</p>
         </div>
         <div style="width: 100%; max-width: 500px;">
-            <button class="gate-btn" onclick="app.startNotePractice()">🔤 음이름 연습<span>영어 음이름 - 계이름 매칭 (중복 출제 전면 차단)</span></button>
-            <button class="gate-btn" onclick="app.showView('view-bass-menu')">🎸 베이스 기타<span>줄별 지판 암기, 음정(Interval) 훈련 및 이론</span></button>
+            <button class="gate-btn" onclick="app.startNotePractice()">🔤 음이름 연습<span>영어 음이름 - 계이름 매칭 (중복 출제 차단)</span></button>
+            <button class="gate-btn" onclick="app.showView('view-bass-menu')">🎸 베이스 기타<span>줄별 지판 암기, 음정 훈련 및 반주법</span></button>
             <button class="gate-btn" onclick="app.showView('view-acoustic-menu')">🪵 어쿠스틱 기타<span>코드 폼 및 지판 암기 시스템 (준비 중)</span></button>
         </div>
     </main>
@@ -267,15 +264,16 @@
     <main id="view-bass-menu" class="view">
         <div style="text-align: center; margin-bottom: 10px;">
             <h2 style="color: var(--primary-color);">🎸 베이스 지판 트레이닝</h2>
-            <p>원하는 난이도와 모드를 선택하세요. (중복 문제 방지 적용)</p>
+            <p>원하는 난이도와 모드를 선택하세요.</p>
         </div>
         <div class="menu-grid">
-            <button class="menu-btn" onclick="app.startMode(1)">초급 모드<span>E, A현(4,3번줄) 자연음 찾기</span></button>
-            <button class="menu-btn" onclick="app.startMode(2)">중급 모드<span>E, A현(4,3번줄) 자연음 + 샵(#)</span></button>
-            <button class="menu-btn" onclick="app.startMode(3)">상급 모드<span>전체 현(E,A,D,G) 모든 음 찾기</span></button>
+            <button class="menu-btn" onclick="app.startMode(1)">초급 모드<span>E, A현 자연음 찾기</span></button>
+            <button class="menu-btn" onclick="app.startMode(2)">중급 모드<span>E, A현 자연음 + 샵(#)</span></button>
+            <button class="menu-btn" onclick="app.startMode(3)">상급 모드<span>전체 현 모든 음 찾기</span></button>
             <button class="menu-btn" onclick="app.startMode(4)">모든 위치 찾기<span>해당 음의 모든 지판 위치 클릭</span></button>
             <button class="menu-btn" onclick="app.startMode(5)">타임 챌린지<span>60초 동안 지정된 줄의 음 맞추기</span></button>
-            <button class="menu-btn" onclick="app.startMode(6)">음정(Interval) 훈련<span>루트음 기준 지정 음정 '모두' 찾기</span></button>
+            <button class="menu-btn" onclick="app.startMode(6)">음정(Interval) 훈련<span>루트음 기준 지정 음정 모두 찾기</span></button>
+            <button class="menu-btn" onclick="app.showView('view-bass-comping')" style="border-color: #ff9800;">🎧 반주법 훈련<span>더블 크로매틱 애니메이션 연동</span></button>
         </div>
         <div class="controls" style="margin-top: 20px;">
             <button class="btn outline" onclick="app.showView('view-main-gate')">메인으로 가기</button>
@@ -285,7 +283,7 @@
     <main id="view-acoustic-menu" class="view">
         <div class="question-box" style="margin-top: 40px; width: 100%;">
             <div class="question-text">🪵 어쿠스틱 기타 훈련 준비 중</div>
-            <div class="sub-text" style="margin-top: 10px;">여기에 어쿠스틱 기타 관련 코드 및 지판 매칭 훈련을 곧 구현할 예정입니다. 편하게 코드 작업을 이어나가세요!</div>
+            <div class="sub-text" style="margin-top: 10px;">여기에 어쿠스틱 기타 관련 코드 및 지판 매칭 훈련을 곧 구현할 예정입니다.</div>
         </div>
         <div class="controls">
             <button class="btn" onclick="app.showView('view-main-gate')">메인으로 가기</button>
@@ -331,6 +329,54 @@
         </div>
     </main>
 
+    <main id="view-bass-comping" class="view">
+        <div class="status-bar">
+            <span>🎧 더블 크로매틱 훈련</span>
+            <span id="current-speed-display">현재 속도: 1.0x</span>
+        </div>
+        
+        <div class="question-box">
+            <div class="question-text">더블 크로매틱 (4분음표)</div>
+            <div class="sub-text">BPM 95 | Dm7 - G7 - CM7</div>
+            
+            <div style="margin-top: 15px; width: 100%; text-align: center;">
+                <img src="tab.png" alt="타브 악보" style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 6px var(--shadow);">
+                <div style="font-size: 0.8rem; color: var(--primary-color); margin-top: 5px;">(타브 악보 뷰)</div>
+            </div>
+            
+            <div style="margin-top: 15px; display: flex; justify-content: center; gap: 10px;">
+                <button class="btn outline" style="padding: 8px 15px;" onclick="setCompingSpeed(0.75)">0.75x</button>
+                <button class="btn outline" style="padding: 8px 15px;" onclick="setCompingSpeed(1.0)">1.0x (원본)</button>
+            </div>
+            
+            <div style="margin-top: 20px; border-top: 1px dashed #ccc; padding-top: 15px;">
+                <audio id="comping-audio" preload="auto" src="double-chromatic.mp3"></audio>
+                <button id="play-btn" class="btn" onclick="startCompingPractice()" style="width: 100%; max-width: 300px; padding: 15px; font-size: 1.1rem;">▶️ 재생 (버튼 누르면 바로 시작)</button>
+            </div>
+        </div>
+
+        <div class="fretboard-container">
+            <div class="markers" id="comping-markers"></div>
+            <div class="fretboard" id="comping-fretboard"></div>
+        </div>
+
+        <div class="controls">
+            <button class="btn outline" onclick="startCompingPractice()">🔄 처음부터 다시재생</button>
+            <button class="btn outline" onclick="app.showView('view-bass-menu'); stopCompingPractice();">메뉴로 나가기</button>
+        </div>
+    </main>
+
+        <div class="fretboard-container">
+            <div class="markers" id="comping-markers"></div>
+            <div class="fretboard" id="comping-fretboard"></div>
+        </div>
+
+        <div class="controls">
+            <button class="btn outline" onclick="startCompingPractice()">🔄 처음부터 다시재생</button>
+            <button class="btn outline" onclick="app.showView('view-bass-menu'); stopCompingPractice();">메뉴로 나가기</button>
+        </div>
+    </main>
+
     <div class="modal-overlay" id="settings-modal">
         <div class="modal">
             <h2>설정</h2>
@@ -357,7 +403,6 @@
     <script>
         const notesSharp = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
         const notesFlat  = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"];
-        
         const solfegeSharps = ["도", "도#", "레", "레#", "미", "파", "파#", "솔", "솔#", "라", "라#", "시"];
         const solfegeFlats  = ["도", "레b", "레", "미b", "미", "파", "솔b", "솔", "라b", "라", "시b", "시"];
         const naturalPitches = [0, 2, 4, 5, 7, 9, 11];
@@ -373,28 +418,14 @@
 
         class BassApp {
             constructor() {
-                this.currentMode = 0;
-                this.score = 0;
-                this.questionCount = 0;
-                this.maxQuestions = 10;
-                this.targetPitch = -1;
-                this.targetString = -1; 
-                this.targetTargets = [];
-                this.foundTargets = 0;
-                this.timeLeft = 0;
-                this.timerInterval = null;
-                this.isQuestionActive = false;
+                this.currentMode = 0; this.score = 0; this.questionCount = 0; this.maxQuestions = 10;
+                this.targetPitch = -1; this.targetString = -1; this.targetTargets = []; this.foundTargets = 0;
+                this.timeLeft = 0; this.timerInterval = null; this.isQuestionActive = false;
+                this.questionQueue = []; this.nextTimeout = null;
                 
-                this.questionQueue = [];
-                this.nextTimeout = null;
-                
-                this.noteFormat = 'eng';
-                this.stringOrder = 'player';
-                this.fretDirection = 'right';
-                
+                this.noteFormat = 'eng'; this.stringOrder = 'player'; this.fretDirection = 'right';
                 this.audioCtx = null;
-                this.initUI();
-                this.loadSettings();
+                this.initUI(); this.loadSettings();
             }
 
             initUI() {
@@ -409,9 +440,7 @@
                 });
                 document.querySelectorAll('input[type="radio"]').forEach(radio => {
                     radio.addEventListener('change', (e) => {
-                        const name = e.target.name;
-                        this[name] = e.target.value;
-                        localStorage.setItem(name, this[name]);
+                        const name = e.target.name; this[name] = e.target.value; localStorage.setItem(name, this[name]);
                         if(name === 'stringOrder' || name === 'fretDirection') this.applySettingsChange();
                     });
                 });
@@ -439,13 +468,9 @@
                 const body = document.body;
                 const btn = document.getElementById('theme-toggle');
                 if (body.getAttribute('data-theme') === 'dark') {
-                    body.removeAttribute('data-theme');
-                    localStorage.setItem('theme', 'light');
-                    btn.textContent = '🌙';
+                    body.removeAttribute('data-theme'); localStorage.setItem('theme', 'light'); btn.textContent = '🌙';
                 } else {
-                    body.setAttribute('data-theme', 'dark');
-                    localStorage.setItem('theme', 'dark');
-                    btn.textContent = '☀️';
+                    body.setAttribute('data-theme', 'dark'); localStorage.setItem('theme', 'dark'); btn.textContent = '☀️';
                 }
             }
 
@@ -458,8 +483,7 @@
                 if (!this.audioCtx) return;
                 const osc = this.audioCtx.createOscillator();
                 const gainNode = this.audioCtx.createGain();
-                osc.connect(gainNode);
-                gainNode.connect(this.audioCtx.destination);
+                osc.connect(gainNode); gainNode.connect(this.audioCtx.destination);
                 const now = this.audioCtx.currentTime;
                 if (type === 'correct') {
                     osc.type = 'sine'; osc.frequency.setValueAtTime(600, now); osc.frequency.exponentialRampToValueAtTime(800, now + 0.1);
@@ -473,24 +497,26 @@
 
             getNoteName(pitchClass, preferFlat = false) {
                 const baseName = preferFlat ? notesFlat[pitchClass] : notesSharp[pitchClass];
-                if (this.noteFormat === 'solfege' && baseName.length === 1) {
-                    return `${baseName} (${solfegeSharps[pitchClass]})`;
-                }
+                if (this.noteFormat === 'solfege' && baseName.length === 1) return `${baseName} (${solfegeSharps[pitchClass]})`;
                 return baseName;
             }
 
             renderFretboard() {
-                const fb = document.getElementById('fretboard');
-                const markersContainer = document.getElementById('markers');
+                this.createBoard('fretboard', 'markers');
+                this.createBoard('comping-fretboard', 'comping-markers');
+            }
+
+            createBoard(fbId, markersId) {
+                const fb = document.getElementById(fbId);
+                const markersContainer = document.getElementById(markersId);
                 if(!fb || !markersContainer) return;
+                
                 fb.innerHTML = ''; markersContainer.innerHTML = '';
 
                 if (this.fretDirection === 'right') {
-                    fb.classList.add('reversed-frets');
-                    markersContainer.classList.add('reversed-frets');
+                    fb.classList.add('reversed-frets'); markersContainer.classList.add('reversed-frets');
                 } else {
-                    fb.classList.remove('reversed-frets');
-                    markersContainer.classList.remove('reversed-frets');
+                    fb.classList.remove('reversed-frets'); markersContainer.classList.remove('reversed-frets');
                 }
 
                 let currentStrings = [...bassStrings];
@@ -498,24 +524,22 @@
 
                 currentStrings.forEach(stringObj => {
                     const row = document.createElement('div');
-                    row.className = 'string-row';
-                    row.dataset.string = stringObj.id;
+                    row.className = 'string-row'; row.dataset.string = stringObj.id;
 
                     for (let fret = 0; fret <= NUM_FRETS; fret++) {
                         const fretDiv = document.createElement('div');
                         fretDiv.className = `fret ${fret === 0 ? 'nut' : ''}`;
-                        fretDiv.dataset.string = stringObj.id;
-                        fretDiv.dataset.fret = fret;
-                        
+                        fretDiv.dataset.string = stringObj.id; fretDiv.dataset.fret = fret;
                         const pitch = (stringObj.startPitch + fret) % 12;
                         fretDiv.dataset.pitch = pitch;
 
                         const noteDiv = document.createElement('div');
-                        noteDiv.className = 'fret-note';
-                        noteDiv.textContent = notesSharp[pitch];
-
+                        noteDiv.className = 'fret-note'; noteDiv.textContent = notesSharp[pitch];
                         fretDiv.appendChild(noteDiv);
-                        fretDiv.addEventListener('click', () => this.handleFretClick(fretDiv, pitch, stringObj.id));
+                        
+                        if(fbId === 'fretboard') {
+                            fretDiv.addEventListener('click', () => this.handleFretClick(fretDiv, pitch, stringObj.id));
+                        }
                         row.appendChild(fretDiv);
                     }
                     fb.appendChild(row);
@@ -524,11 +548,8 @@
                 for (let fret = 0; fret <= NUM_FRETS; fret++) {
                     const markerDiv = document.createElement('div');
                     markerDiv.className = `marker-fret ${fret === 0 ? 'nut' : ''}`;
-                    if ([3, 5, 7, 9].includes(fret)) {
-                        markerDiv.innerHTML = `<div class="dot"></div>`;
-                    } else if (fret === 12) {
-                        markerDiv.innerHTML = `<div class="double-dot"><div class="dot"></div><div class="dot"></div></div>`;
-                    }
+                    if ([3, 5, 7, 9].includes(fret)) markerDiv.innerHTML = `<div class="dot"></div>`;
+                    else if (fret === 12) markerDiv.innerHTML = `<div class="double-dot"><div class="dot"></div><div class="dot"></div></div>`;
                     markersContainer.appendChild(markerDiv);
                 }
             }
@@ -545,91 +566,51 @@
                     f.classList.remove('correct', 'wrong', 'hint', 'root-note');
                     f.querySelector('.fret-note').textContent = ''; 
                 });
-                
                 const fb = document.getElementById('fretboard');
                 if (fb) fb.classList.remove('has-highlight');
                 document.querySelectorAll('.string-row').forEach(row => row.classList.remove('highlighted'));
             }
 
             startNotePractice() {
-                this.initAudio();
-                this.score = 0;
-                this.questionCount = 0;
-                this.currentMode = 0; 
-                
+                this.initAudio(); this.score = 0; this.questionCount = 0; this.currentMode = 0; 
                 this.questionQueue = Array.from({length: 12}, (_, i) => i);
                 this.questionQueue.sort(() => Math.random() - 0.5);
-
-                this.showView('view-note-quiz');
-                this.generateNoteQuestion();
+                this.showView('view-note-quiz'); this.generateNoteQuestion();
             }
 
             generateNoteQuestion() {
                 this.questionCount++;
                 if (this.questionCount > this.maxQuestions || this.questionQueue.length === 0) {
                     document.getElementById('note-question-text').textContent = "훈련 완료!";
-                    document.getElementById('note-choices-container').innerHTML = "";
-                    document.getElementById('note-progress').textContent = `진행률: 완료`;
-                    document.getElementById('note-score').textContent = `최종 점수: ${this.score}/${this.maxQuestions}`;
-                    return;
+                    document.getElementById('note-choices-container').innerHTML = ""; return;
                 }
-
                 document.getElementById('note-progress').textContent = `진행률: ${this.questionCount}/${this.maxQuestions}`;
                 document.getElementById('note-score').textContent = `점수: ${this.score}`;
-
                 this.targetPitch = this.questionQueue.shift();
                 
-                let questionNoteName = "";
-                let correctAnswers = [];
-                let choices = [];
-
+                let questionNoteName = ""; let correctAnswers = []; let choices = [];
                 if (naturalPitches.includes(this.targetPitch)) {
-                    questionNoteName = notesSharp[this.targetPitch];
-                    const correctAnswer = solfegeSharps[this.targetPitch];
-                    correctAnswers = [correctAnswer];
-                    choices.push(correctAnswer);
-
-                    let wrongPool = naturalPitches
-                        .filter(p => p !== this.targetPitch)
-                        .map(p => solfegeSharps[p]);
-                    wrongPool.sort(() => Math.random() - 0.5);
-                    choices = choices.concat(wrongPool.slice(0, 3));
+                    questionNoteName = notesSharp[this.targetPitch]; const correctAnswer = solfegeSharps[this.targetPitch];
+                    correctAnswers = [correctAnswer]; choices.push(correctAnswer);
+                    let wrongPool = naturalPitches.filter(p => p !== this.targetPitch).map(p => solfegeSharps[p]);
+                    wrongPool.sort(() => Math.random() - 0.5); choices = choices.concat(wrongPool.slice(0, 3));
                 } else {
                     questionNoteName = Math.random() > 0.5 ? notesSharp[this.targetPitch] : notesFlat[this.targetPitch];
-                    
-                    const correctSharp = solfegeSharps[this.targetPitch];
-                    const correctFlat = solfegeFlats[this.targetPitch];
+                    const correctSharp = solfegeSharps[this.targetPitch]; const correctFlat = solfegeFlats[this.targetPitch];
                     correctAnswers = [correctSharp, correctFlat]; 
-
                     const scenario = Math.floor(Math.random() * 3);
-                    if (scenario === 0) choices.push(correctSharp);
-                    else if (scenario === 1) choices.push(correctFlat);
-                    else choices.push(correctSharp, correctFlat);
-
+                    if (scenario === 0) choices.push(correctSharp); else if (scenario === 1) choices.push(correctFlat); else choices.push(correctSharp, correctFlat);
                     let wrongPool = [];
-                    accidentalPitches.forEach(p => {
-                        if (p !== this.targetPitch) {
-                            wrongPool.push(solfegeSharps[p]);
-                            wrongPool.push(solfegeFlats[p]);
-                        }
-                    });
+                    accidentalPitches.forEach(p => { if (p !== this.targetPitch) { wrongPool.push(solfegeSharps[p]); wrongPool.push(solfegeFlats[p]); } });
                     wrongPool.sort(() => Math.random() - 0.5);
-
-                    const needed = 4 - choices.length;
-                    choices = choices.concat(wrongPool.slice(0, needed));
+                    choices = choices.concat(wrongPool.slice(0, 4 - choices.length));
                 }
-
                 choices.sort(() => Math.random() - 0.5);
-
                 document.getElementById('note-question-text').textContent = questionNoteName;
-                const container = document.getElementById('note-choices-container');
-                container.innerHTML = "";
-
+                const container = document.getElementById('note-choices-container'); container.innerHTML = "";
                 this.isQuestionActive = true;
                 choices.forEach(choice => {
-                    const btn = document.createElement('button');
-                    btn.className = 'choice-btn';
-                    btn.textContent = choice;
+                    const btn = document.createElement('button'); btn.className = 'choice-btn'; btn.textContent = choice;
                     btn.addEventListener('click', () => this.handleNoteAnswer(btn, choice, correctAnswers));
                     container.appendChild(btn);
                 });
@@ -638,153 +619,70 @@
             handleNoteAnswer(clickedBtn, selectedAnswer, correctAnswers) {
                 if (!this.isQuestionActive) return;
                 this.isQuestionActive = false;
-
                 const allButtons = document.querySelectorAll('.choice-btn');
-                
                 if (correctAnswers.includes(selectedAnswer)) {
-                    this.playSound('correct');
-                    clickedBtn.classList.add('correct');
-                    this.score++;
-                    allButtons.forEach(btn => {
-                        if (correctAnswers.includes(btn.textContent)) btn.classList.add('correct');
-                    });
+                    this.playSound('correct'); clickedBtn.classList.add('correct'); this.score++;
                 } else {
-                    this.playSound('wrong');
-                    clickedBtn.classList.add('wrong');
-                    allButtons.forEach(btn => {
-                        if (correctAnswers.includes(btn.textContent)) btn.classList.add('correct');
-                    });
+                    this.playSound('wrong'); clickedBtn.classList.add('wrong');
                 }
-
+                allButtons.forEach(btn => { if (correctAnswers.includes(btn.textContent)) btn.classList.add('correct'); });
                 setTimeout(() => this.generateNoteQuestion(), 1100);
             }
 
             startMode(mode) {
-                this.initAudio();
-                this.currentMode = mode;
-                this.score = 0;
-                this.questionCount = 0;
-                this.clearFretboard();
-                document.getElementById('btn-next').style.display = 'none';
-                
+                this.initAudio(); this.currentMode = mode; this.score = 0; this.questionCount = 0;
+                this.clearFretboard(); document.getElementById('btn-next').style.display = 'none';
                 const modeNames = ["", "초급 (E/A현 자연음)", "중급 (E/A현 샵)", "상급 (전체현 모든음)", "모든 위치 찾기", "타임 챌린지", "음정 훈련"];
                 document.getElementById('ui-mode-name').textContent = modeNames[mode];
-                
                 this.questionQueue = [];
-                
-                if (mode === 1) {
-                    [0, 1].forEach(sId => {
-                        naturalPitches.forEach(pitch => {
-                            this.questionQueue.push({ stringId: sId, pitch: pitch });
-                        });
-                    });
-                } else if (mode === 2) {
-                    [0, 1].forEach(sId => {
-                        for(let p=0; p<12; p++) {
-                            this.questionQueue.push({ stringId: sId, pitch: p });
-                        }
-                    });
-                } else if (mode === 3 || mode === 5) {
-                    [0, 1, 2, 3].forEach(sId => {
-                        for(let p=0; p<12; p++) {
-                            this.questionQueue.push({ stringId: sId, pitch: p });
-                        }
-                    });
-                } else if (mode === 4) {
-                    naturalPitches.forEach(p => this.questionQueue.push({ pitch: p }));
-                } else if (mode === 6) {
-                    naturalPitches.forEach(p => this.questionQueue.push({ pitch: p }));
-                }
-
+                if (mode === 1) [0, 1].forEach(sId => naturalPitches.forEach(pitch => this.questionQueue.push({ stringId: sId, pitch: pitch })));
+                else if (mode === 2) [0, 1].forEach(sId => { for(let p=0; p<12; p++) this.questionQueue.push({ stringId: sId, pitch: p }); });
+                else if (mode === 3 || mode === 5) [0, 1, 2, 3].forEach(sId => { for(let p=0; p<12; p++) this.questionQueue.push({ stringId: sId, pitch: p }); });
+                else if (mode === 4 || mode === 6) naturalPitches.forEach(p => this.questionQueue.push({ pitch: p }));
                 this.questionQueue.sort(() => Math.random() - 0.5);
-
-                if (mode === 5) this.timeLeft = 60;
-                
-                this.showView('view-quiz');
-                if (mode === 5) this.startTimer();
-                this.generateQuestion();
+                this.showView('view-quiz'); this.generateQuestion();
             }
 
             generateQuestion() {
-                clearTimeout(this.nextTimeout);
-
-                this.clearFretboard();
-                this.isQuestionActive = true;
-                this.targetString = -1;
+                clearTimeout(this.nextTimeout); this.clearFretboard(); this.isQuestionActive = true; this.targetString = -1;
                 document.getElementById('btn-next').style.display = 'none';
-                
                 if (this.currentMode !== 5) {
                     this.questionCount++;
                     if (this.questionCount > this.maxQuestions || this.questionQueue.length === 0) {
-                        this.isQuestionActive = false;
-                        document.getElementById('ui-question').textContent = "훈련 완료!";
-                        document.getElementById('ui-subtext').textContent = `최종 점수: ${this.score} / ${this.maxQuestions}`;
-                        return;
+                        this.isQuestionActive = false; document.getElementById('ui-question').textContent = "훈련 완료!"; return;
                     }
-                } else {
-                    if(this.questionQueue.length === 0) {
-                        [0, 1, 2, 3].forEach(sId => { for(let p=0; p<12; p++) this.questionQueue.push({ stringId: sId, pitch: p }); });
-                        this.questionQueue.sort(() => Math.random() - 0.5);
-                    }
-                }
-                
-                if (this.currentMode !== 5) {
                     document.getElementById('ui-score').textContent = `점수: ${this.score}`;
                     document.getElementById('ui-progress').textContent = `진행률: ${this.questionCount}/${this.maxQuestions}`;
                 }
-
-                const qEl = document.getElementById('ui-question');
-                const subEl = document.getElementById('ui-subtext');
-
+                const qEl = document.getElementById('ui-question'); const subEl = document.getElementById('ui-subtext');
                 const currentTask = this.questionQueue.shift();
 
-                if (this.currentMode === 1 || this.currentMode === 2 || this.currentMode === 3 || this.currentMode === 5) {
-                    this.targetString = currentTask.stringId;
-                    this.targetPitch = currentTask.pitch;
-                    const stringObj = bassStrings.find(s => s.id === this.targetString);
+                if ([1, 2, 3, 5].includes(this.currentMode)) {
+                    this.targetString = currentTask.stringId; this.targetPitch = currentTask.pitch;
                     const useFlat = Math.random() > 0.5 && accidentalPitches.includes(this.targetPitch);
-                    
-                    qEl.textContent = `${stringObj.name}현의 '${this.getNoteName(this.targetPitch, useFlat)}' 위치는?`;
-                    subEl.textContent = this.targetString === 0 || this.targetString === 1 ? "밝게 강조된 줄 안에서만 선택이 가능합니다." : "지정된 줄 안에서 정답 위치를 클릭하세요.";
+                    qEl.textContent = `${bassStrings.find(s => s.id === this.targetString).name}현의 '${this.getNoteName(this.targetPitch, useFlat)}' 위치는?`;
+                    subEl.textContent = "지정된 줄 안에서 정답 위치를 클릭하세요.";
                 } else if (this.currentMode === 4) {
-                    this.targetPitch = currentTask.pitch;
-                    this.targetTargets = [];
-                    document.querySelectorAll('.fret').forEach(f => {
-                        if (parseInt(f.dataset.pitch) === this.targetPitch) this.targetTargets.push(f);
-                    });
-                    this.foundTargets = 0;
-                    qEl.textContent = `모든 '${this.getNoteName(this.targetPitch)}' 찾기`;
+                    this.targetPitch = currentTask.pitch; this.targetTargets = [];
+                    document.querySelectorAll('.fret').forEach(f => { if (parseInt(f.dataset.pitch) === this.targetPitch) this.targetTargets.push(f); });
+                    this.foundTargets = 0; qEl.textContent = `모든 '${this.getNoteName(this.targetPitch)}' 찾기`;
                     subEl.textContent = `남은 개수: ${this.targetTargets.length}개`;
                 } else if (this.currentMode === 6) {
-                    const rootPitch = currentTask.pitch;
-                    const intervals = [
-                        { name: "2도", semitones: 2 }, { name: "3도", semitones: 4 },
-                        { name: "4도", semitones: 5 }, { name: "5도", semitones: 7 },
-                        { name: "6도", semitones: 9 }, { name: "7도", semitones: 11 }
-                    ];
+                    const rootPitch = currentTask.pitch; const intervals = [{name:"2도", semitones:2}, {name:"3도", semitones:4}, {name:"4도", semitones:5}, {name:"5도", semitones:7}];
                     const interval = intervals[Math.floor(Math.random() * intervals.length)];
-                    this.targetPitch = (rootPitch + interval.semitones) % 12;
-                    
-                    this.targetTargets = [];
+                    this.targetPitch = (rootPitch + interval.semitones) % 12; this.targetTargets = [];
                     document.querySelectorAll('.fret').forEach(f => {
                         const pitch = parseInt(f.dataset.pitch);
-                        if (pitch === this.targetPitch) {
-                            this.targetTargets.push(f);
-                        } else if (pitch === rootPitch) {
-                            f.classList.add('root-note');
-                            f.querySelector('.fret-note').textContent = notesSharp[rootPitch];
-                        }
+                        if (pitch === this.targetPitch) this.targetTargets.push(f);
+                        else if (pitch === rootPitch) { f.classList.add('root-note'); f.querySelector('.fret-note').textContent = notesSharp[rootPitch]; }
                     });
-                    this.foundTargets = 0;
-                    qEl.textContent = `'${this.getNoteName(rootPitch)}'의 ${interval.name} 모두 찾기`;
-                    subEl.textContent = `남은 개수: ${this.targetTargets.length}개 (파란색 = 루트음)`;
+                    this.foundTargets = 0; qEl.textContent = `'${this.getNoteName(rootPitch)}'의 ${interval.name} 모두 찾기`;
+                    subEl.textContent = `남은 개수: ${this.targetTargets.length}개`;
                 }
-
                 const fb = document.getElementById('fretboard');
                 if (fb && this.targetString !== -1) {
                     fb.classList.add('has-highlight');
-                    const row = fb.querySelector(`.string-row[data-string="${this.targetString}"]`);
-                    if (row) row.classList.add('highlighted');
+                    fb.querySelector(`.string-row[data-string="${this.targetString}"]`)?.classList.add('highlighted');
                 }
             }
 
@@ -797,19 +695,13 @@
                     if (pitch === this.targetPitch) {
                         this.playSound('correct'); fretDiv.classList.add('correct');
                         fretDiv.querySelector('.fret-note').textContent = notesSharp[pitch];
-                        this.foundTargets++;
-                        const remain = this.targetTargets.length - this.foundTargets;
+                        this.foundTargets++; const remain = this.targetTargets.length - this.foundTargets;
                         document.getElementById('ui-subtext').textContent = `남은 개수: ${remain}개`;
-                        
                         if (remain === 0) {
-                            this.score++; this.isQuestionActive = false;
-                            document.getElementById('ui-subtext').textContent = "완벽합니다! (2초 후 자동 이동)";
-                            document.getElementById('btn-next').style.display = 'block';
+                            this.score++; this.isQuestionActive = false; document.getElementById('btn-next').style.display = 'block';
                             this.nextTimeout = setTimeout(() => this.generateQuestion(), 2000);
                         }
-                    } else {
-                        this.playSound('wrong'); this.showWrongTemp(fretDiv);
-                    }
+                    } else { this.playSound('wrong'); this.showWrongTemp(fretDiv); }
                     return;
                 }
 
@@ -817,51 +709,149 @@
                     this.playSound('correct'); fretDiv.classList.add('correct');
                     fretDiv.querySelector('.fret-note').textContent = notesSharp[pitch];
                     this.score++; this.isQuestionActive = false;
-                    
-                    if (this.currentMode === 5) {
-                        document.getElementById('ui-subtext').textContent = "정답입니다!";
-                        this.nextTimeout = setTimeout(() => this.generateQuestion(), 400);
-                    } else {
-                        document.getElementById('ui-subtext').textContent = "정답입니다! (2초 후 자동 이동)";
-                        document.getElementById('btn-next').style.display = 'block';
-                        this.nextTimeout = setTimeout(() => this.generateQuestion(), 2000);
-                    }
-                } 
-                else {
+                    document.getElementById('btn-next').style.display = 'block';
+                    this.nextTimeout = setTimeout(() => this.generateQuestion(), 2000);
+                } else {
                     this.playSound('wrong'); this.showWrongTemp(fretDiv);
-                    if (this.currentMode !== 5) {
-                        this.isQuestionActive = false;
-                        document.getElementById('ui-subtext').textContent = "오답입니다. 정답 위치를 확인하세요.";
-                        this.showHints(this.targetPitch, this.targetString);
-                        document.getElementById('btn-next').style.display = 'block'; 
-                    }
+                    this.isQuestionActive = false; document.getElementById('btn-next').style.display = 'block'; 
+                    document.querySelectorAll('.fret').forEach(f => {
+                        if (parseInt(f.dataset.pitch) === this.targetPitch && (this.targetString === -1 || parseInt(f.dataset.string) === this.targetString)) {
+                            f.classList.add('hint'); f.querySelector('.fret-note').textContent = notesSharp[this.targetPitch];
+                        }
+                    });
                 }
             }
 
-            showWrongTemp(fretDiv) {
-                fretDiv.classList.add('wrong');
-                setTimeout(() => fretDiv.classList.remove('wrong'), 400);
-            }
-
-            showHints(targetPitch, targetString) {
-                document.querySelectorAll('.fret').forEach(f => {
-                    const p = parseInt(f.dataset.pitch);
-                    const s = parseInt(f.dataset.string);
-                    if (p === targetPitch && (targetString === -1 || s === targetString)) {
-                        f.classList.add('hint'); 
-                        f.querySelector('.fret-note').textContent = notesSharp[targetPitch];
-                    }
-                });
-            }
-
-            nextQuestion() { 
-                clearTimeout(this.nextTimeout);
-                this.generateQuestion(); 
-            }
+            showWrongTemp(fretDiv) { fretDiv.classList.add('wrong'); setTimeout(() => fretDiv.classList.remove('wrong'), 400); }
+            nextQuestion() { clearTimeout(this.nextTimeout); this.generateQuestion(); }
         }
 
         let app;
         document.addEventListener('DOMContentLoaded', () => { app = new BassApp(); });
+
+        // ==========================================
+        // 반주법 (더블 크로매틱 어프로치) 전용 로직
+        // ==========================================
+        
+        const baseBpm = 95;
+        let compingPlaybackRate = 1.0;
+        let isCompingPlaying = false;
+        let compingAnimationId = null;
+        let compingTimeout = null;
+
+
+        function setCompingSpeed(rate) {
+            compingPlaybackRate = rate;
+            document.getElementById('current-speed-display').textContent = `현재 속도: ${rate}x`;
+            const audio = document.getElementById('comping-audio');
+            if(audio) audio.playbackRate = rate;
+        }
+
+        function playMetronomeBeep(ctx, time, isFirst) {
+            const osc = ctx.createOscillator();
+            const gainNode = ctx.createGain();
+            osc.connect(gainNode);
+            gainNode.connect(ctx.destination);
+            osc.frequency.setValueAtTime(isFirst ? 1200 : 800, time);
+            gainNode.gain.setValueAtTime(0, time);
+            gainNode.gain.linearRampToValueAtTime(0.5, time + 0.01);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, time + 0.1);
+            osc.start(time);
+            osc.stop(time + 0.1);
+        }
+
+        const doubleChromaticPattern = [
+            // [1주기: 1~4마디]
+            // 1마디: Dm7 -> G7(어프로치 F, F#)
+            { b: 0, s: 1, f: 5 }, { b: 1.75, s: 1, f: 5 }, { b: 2.50, s: 1, f: 5, mute: true }, { b: 2.75, s: 1, f: 5 }, { b: 3.50, s: 0, f: 1 }, { b: 3.75, s: 0, f: 2 },
+            // 2마디: G7 -> CM7(어프로치 Bb, B)
+            { b: 4, s: 0, f: 3 }, { b: 4.5, s: 0, f: 3 }, { b: 5.75, s: 0, f: 3 }, { b: 6.50, s: 0, f: 3, mute: true }, { b: 6.75, s: 0, f: 3 }, { b: 7.50, s: 1, f: 5 }, { b: 7.75, s: 1, f: 4 },
+            // 3마디: CM7
+            { b: 8, s: 1, f: 3 }, { b: 9.75, s: 1, f: 3 }, { b: 10.50, s: 1, f: 3, mute: true }, { b: 10.75, s: 1, f: 3 }, { b: 11, s: 1, f: 3 },
+            // 4마디: CM7 -> 다시 Dm7로 가기 위한 어프로치 (C, C#)
+            { b: 12, s: 1, f: 3 }, { b: 13.75, s: 1, f: 3 }, { b: 14.50, s: 1, f: 3, mute: true }, { b: 14.75, s: 1, f: 3 }, { b: 15.50, s: 1, f: 3 }, { b: 15.75, s: 1, f: 4 },
+
+            // [2주기: 5~8마디 (위 패턴에서 박자(b)에 정확히 +16)]
+            { b: 16, s: 1, f: 5 }, { b: 17.75, s: 1, f: 5 }, { b: 18.50, s: 1, f: 5, mute: true }, { b: 18.75, s: 1, f: 5 }, { b: 19.50, s: 0, f: 1 }, { b: 19.75, s: 0, f: 2 },
+            { b: 20, s: 0, f: 3 }, { b: 20.5, s: 0, f: 3 }, { b: 21.75, s: 0, f: 3 }, { b: 22.50, s: 0, f: 3, mute: true }, { b: 22.75, s: 0, f: 3 }, { b: 23.50, s: 1, f: 5 }, { b: 23.75, s: 1, f: 4 },
+            { b: 24, s: 1, f: 3 }, { b: 25.75, s: 1, f: 3 }, { b: 26.50, s: 1, f: 3, mute: true }, { b: 26.75, s: 1, f: 3 }, { b: 27, s: 1, f: 3 },
+            { b: 28, s: 1, f: 3 }, { b: 29.75, s: 1, f: 3 }, { b: 30.50, s: 1, f: 3, mute: true }, { b: 30.75, s: 1, f: 3 }, { b: 31.50, s: 1, f: 3 }, { b: 31.75, s: 1, f: 4 }, { b: 32, s: 1, f: 5 }
+        ];
+
+        // (주의) 기존에 있던 function loadAudioFile(event) { ... } 함수는 이제 필요 없으니 지우셔도 됩니다!
+
+        function startCompingPractice() {
+            stopCompingPractice();
+            const audio = document.getElementById('comping-audio');
+            
+            // 💡 파일이 있는지 체크하는 경고창 제거
+            isCompingPlaying = true;
+            audio.playbackRate = compingPlaybackRate;
+            audio.currentTime = 0;
+
+            // 클릭 즉시 재생 & 애니메이션 시작 (메트로놈 없음)
+            audio.play().catch(e => console.log("Audio play error:", e));
+            compingAnimationId = requestAnimationFrame(updateCompingFretboard);
+        }
+        
+
+        function stopCompingPractice() {
+            isCompingPlaying = false;
+            clearTimeout(compingTimeout);
+            cancelAnimationFrame(compingAnimationId);
+            
+            const audio = document.getElementById('comping-audio');
+            if(audio) {
+                audio.pause(); audio.currentTime = 0;
+            }
+            document.querySelectorAll('#comping-fretboard .fret').forEach(f => {
+                f.classList.remove('anim-active', 'anim-mute');
+                f.querySelector('.fret-note').textContent = '';
+            });
+        }
+
+        function updateCompingFretboard() {
+            if(!isCompingPlaying) return;
+            
+            const audio = document.getElementById('comping-audio');
+            const currentMusicSec = audio.currentTime; 
+            
+            // 1초 딜레이 적용 (오디오보다 애니메이션이 1초 늦게 나옴)
+            const offsetSec = 2.75; 
+            const currentBeat = (currentMusicSec - offsetSec) * (baseBpm / 60);
+
+            document.querySelectorAll('#comping-fretboard .fret').forEach(f => {
+                f.classList.remove('anim-active', 'anim-mute');
+                f.querySelector('.fret-note').textContent = '';
+            });
+
+            doubleChromaticPattern.forEach(note => {
+                // 촘촘한 박자에 맞춰 쿨타임 조절 (뮤트는 0.15, 일반은 0.20)
+                const duration = note.mute ? 0.15 : 0.20; 
+
+                if (currentBeat >= note.b && currentBeat < note.b + duration) {
+                    const fretRow = document.querySelector(`#comping-fretboard .string-row[data-string="${note.s}"]`);
+                    if(fretRow) {
+                        const targetFret = fretRow.querySelector(`.fret[data-fret="${note.f}"]`);
+                        if(targetFret) {
+                            if (note.mute) {
+                                targetFret.classList.add('anim-mute');
+                                targetFret.querySelector('.fret-note').textContent = 'X';
+                            } else {
+                                targetFret.classList.add('anim-active');
+                                targetFret.querySelector('.fret-note').textContent = notesSharp[targetFret.dataset.pitch];
+                            }
+                        }
+                    }
+                }
+            });
+
+            if (!audio.paused && !audio.ended) {
+                compingAnimationId = requestAnimationFrame(updateCompingFretboard);
+            } else if (audio.ended) {
+                stopCompingPractice();
+            }
+        }
     </script>
 </body>
 </html>
