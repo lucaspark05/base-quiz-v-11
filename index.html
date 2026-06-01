@@ -348,8 +348,8 @@
             </div>
             
             <div style="margin-top: 20px; border-top: 1px dashed #ccc; padding-top: 15px;">
-                <audio id="comping-audio" preload="auto" src="더블 크로매틱.mp3"></audio>
-                <button id="play-btn" class="btn" onclick="startCompingPractice()" style="width: 100%; max-width: 300px; padding: 15px; font-size: 1.1rem;">▶️ 재생 (2.7초 대기 포함)</button>
+                <audio id="comping-audio" preload="auto" src="더블 크로매틱.mp3"></audio>
+                <button id="play-btn" class="btn" onclick="startCompingPractice()" style="width: 100%; max-width: 300px; padding: 15px; font-size: 1.1rem;">▶️ 재생</button>
             </div>
         </div>
 
@@ -733,10 +733,13 @@
         }
 
         const doubleChromaticPattern = [
+            // [1주기: 1~4마디]
             { b: 0, s: 1, f: 5 }, { b: 1.75, s: 1, f: 5 }, { b: 2.50, s: 1, f: 5, mute: true }, { b: 2.75, s: 1, f: 5 }, { b: 3.50, s: 0, f: 1 }, { b: 3.75, s: 0, f: 2 },
             { b: 4, s: 0, f: 3 }, { b: 4.5, s: 0, f: 3 }, { b: 5.75, s: 0, f: 3 }, { b: 6.50, s: 0, f: 3, mute: true }, { b: 6.75, s: 0, f: 3 }, { b: 7.50, s: 1, f: 5 }, { b: 7.75, s: 1, f: 4 },
             { b: 8, s: 1, f: 3 }, { b: 9.75, s: 1, f: 3 }, { b: 10.50, s: 1, f: 3, mute: true }, { b: 10.75, s: 1, f: 3 }, { b: 11, s: 1, f: 3 },
             { b: 12, s: 1, f: 3 }, { b: 13.75, s: 1, f: 3 }, { b: 14.50, s: 1, f: 3, mute: true }, { b: 14.75, s: 1, f: 3 }, { b: 15.50, s: 1, f: 3 }, { b: 15.75, s: 1, f: 4 },
+
+            // [2주기: 5~8마디]
             { b: 16, s: 1, f: 5 }, { b: 17.75, s: 1, f: 5 }, { b: 18.50, s: 1, f: 5, mute: true }, { b: 18.75, s: 1, f: 5 }, { b: 19.50, s: 0, f: 1 }, { b: 19.75, s: 0, f: 2 },
             { b: 20, s: 0, f: 3 }, { b: 20.5, s: 0, f: 3 }, { b: 21.75, s: 0, f: 3 }, { b: 22.50, s: 0, f: 3, mute: true }, { b: 22.75, s: 0, f: 3 }, { b: 23.50, s: 1, f: 5 }, { b: 23.75, s: 1, f: 4 },
             { b: 24, s: 1, f: 3 }, { b: 25.75, s: 1, f: 3 }, { b: 26.50, s: 1, f: 3, mute: true }, { b: 26.75, s: 1, f: 3 }, { b: 27, s: 1, f: 3 },
@@ -744,42 +747,40 @@
         ];
 
         function startCompingPractice() {
-            stopCompingPractice(); 
-            
+            stopCompingPractice();
             const audio = document.getElementById('comping-audio');
             if(!audio) return;
-
+            
             isCompingPlaying = true;
             audio.playbackRate = compingPlaybackRate;
             audio.currentTime = 0;
-            
+
             audio.play().catch(e => {
-                console.log("Audio play error", e);
+                console.log("Audio play error:", e);
             });
-            
-            const beatDuration = (60 / baseBpm) / compingPlaybackRate; 
-            const fixedDelayMs = 2700; // 배속에 구애받지 않고 무조건 실제 시간 기준 2.7초 딜레이 고정
+
+            const beatDuration = (60 / baseBpm) / compingPlaybackRate;
 
             doubleChromaticPattern.forEach(note => {
-                const delayMs = fixedDelayMs + (note.b * beatDuration * 1000);
+                const delayMs = note.b * beatDuration * 1000; // 2.7초 딜레이 완벽 제거 (즉시 동시 실행)
                 const animDuration = (note.mute ? 0.2 : 0.4) * beatDuration * 1000;
 
                 const timeoutId = setTimeout(() => {
                     if (!isCompingPlaying) return;
-                    
+
                     const fDiv = document.querySelector(`#comping-fretboard .fret[data-string="${note.s}"][data-fret="${note.f}"]`);
                     if (fDiv) {
                         const animClass = note.mute ? 'anim-mute' : 'anim-active';
                         fDiv.classList.add(animClass);
                         fDiv.querySelector('.fret-note').textContent = notesSharp[parseInt(fDiv.dataset.pitch)];
-                        
+
                         setTimeout(() => {
                             fDiv.classList.remove(animClass);
                             fDiv.querySelector('.fret-note').textContent = '';
                         }, animDuration);
                     }
                 }, delayMs);
-                
+
                 compingTimeouts.push(timeoutId);
             });
         }
@@ -791,16 +792,16 @@
                 audio.pause();
                 audio.currentTime = 0;
             }
-            
+
             compingTimeouts.forEach(t => clearTimeout(t));
             compingTimeouts = [];
-            
+
             document.querySelectorAll('#comping-fretboard .fret').forEach(f => {
                 f.classList.remove('anim-active', 'anim-mute');
                 f.querySelector('.fret-note').textContent = '';
             });
         }
-        
+
         document.getElementById('comping-audio').addEventListener('ended', () => {
             stopCompingPractice();
         });
