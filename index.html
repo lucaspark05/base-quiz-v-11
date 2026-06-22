@@ -255,7 +255,7 @@
             <p>훈련하고자 하는 영역을 선택하세요.</p>
         </div>
         <div style="width: 100%; max-width: 500px;">
-            <button class="gate-btn" onclick="app.startNotePractice()">🔤 음이름 훈련<span>영어 음이름 - 계이름 매칭</span></button>
+            <button class="gate-btn" onclick="app.startNotePractice()">🔤 음이름 훈련<span>영어 음이름 - 계이름 매칭 (중복 출제 차단)</span></button>
             <button class="gate-btn" onclick="app.showView('view-bass-menu')">🎸 베이스 기타<span>줄별 지판 암기, 음정 훈련 및 반주법</span></button>
             <button class="gate-btn" onclick="app.showView('view-acoustic-menu')">🪵 어쿠스틱 기타<span>코드 폼 및 지판 암기 시스템 (준비 중)</span></button>
         </div>
@@ -567,13 +567,8 @@
             }
 
             showView(viewId) {
+                // 수정 완료: 화면 전환 시 지판, 애니메이션 상태 등을 완전히 초기화
                 this.clearFretboard(); 
-                
-                // 화면 이동 시 예약된 문제 생성 및 구동 중인 모든 타이머 완벽하게 정지
-                clearTimeout(this.nextTimeout);
-                clearInterval(this.timerInterval);
-                this.isQuestionActive = false;
-
                 if (typeof stopCompingPractice === 'function') stopCompingPractice();
 
                 document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
@@ -583,6 +578,7 @@
             closeSettings() { document.getElementById('settings-modal').style.display = 'none'; }
             
             clearFretboard() {
+                // 수정 완료: 앱에 있는 모든 지판의 상태 색상 및 텍스트 리셋
                 document.querySelectorAll('.fret').forEach(f => {
                     f.classList.remove('correct', 'wrong', 'hint', 'root-note', 'anim-active', 'anim-mute');
                     f.querySelector('.fret-note').textContent = ''; 
@@ -651,10 +647,6 @@
             }
 
             startMode(mode) {
-                clearTimeout(this.nextTimeout);
-                clearInterval(this.timerInterval);
-                this.isQuestionActive = false;
-
                 this.initAudio(); this.currentMode = mode; this.score = 0; this.questionCount = 0;
                 this.clearFretboard(); document.getElementById('btn-next').style.display = 'none';
                 const modeNames = ["", "초급 (E/A현 자연음)", "중급 (E/A현 샵)", "상급 (전체현 모든음)", "모든 위치 찾기", "타임 챌린지", "음정 훈련"];
@@ -663,44 +655,14 @@
                 if (mode === 1) [0, 1].forEach(sId => naturalPitches.forEach(pitch => this.questionQueue.push({ stringId: sId, pitch: pitch })));
                 else if (mode === 2) [0, 1].forEach(sId => { for(let p=0; p<12; p++) this.questionQueue.push({ stringId: sId, pitch: p }); });
                 else if (mode === 3 || mode === 5) [0, 1, 2, 3].forEach(sId => { for(let p=0; p<12; p++) this.questionQueue.push({ stringId: sId, pitch: p }); });
-                else if (mode === 4 || mode === 6) {
-                    for (let i = 0; i < 20; i++) {
-                        const randomPitch = naturalPitches[Math.floor(Math.random() * naturalPitches.length)];
-                        this.questionQueue.push({ pitch: randomPitch });
-                    }
-                }
+                else if (mode === 4 || mode === 6) naturalPitches.forEach(p => this.questionQueue.push({ pitch: p }));
                 this.questionQueue.sort(() => Math.random() - 0.5);
-
-                // 안전하게 화면을 먼저 전환합니다.
-                this.showView('view-quiz'); 
-
-                // 모드 5(타임 챌린지)일 때 실시간 타이머 작동
-                if (mode === 5) {
-                    this.timeLeft = 60;
-                    document.getElementById('ui-progress').textContent = `남은 시간: ${this.timeLeft}초`;
-                    
-                    this.timerInterval = setInterval(() => {
-                        this.timeLeft--;
-                        document.getElementById('ui-progress').textContent = `남은 시간: ${this.timeLeft}초`;
-                        
-                        if (this.timeLeft <= 0) {
-                            clearInterval(this.timerInterval);
-                            clearTimeout(this.nextTimeout);
-                            this.isQuestionActive = false;
-                            document.getElementById('ui-question').textContent = "⏱️ 시간 종료! 훈련 완료!";
-                            document.getElementById('ui-subtext').textContent = `최종 점수: ${this.score}점`;
-                            document.getElementById('btn-next').style.display = 'none';
-                        }
-                    }, 1000);
-                }
-
-                this.generateQuestion();
+                this.showView('view-quiz'); this.generateQuestion();
             }
 
             generateQuestion() {
                 clearTimeout(this.nextTimeout); this.clearFretboard(); this.isQuestionActive = true; this.targetString = -1;
                 document.getElementById('btn-next').style.display = 'none';
-                
                 if (this.currentMode !== 5) {
                     this.questionCount++;
                     if (this.questionCount > this.maxQuestions || this.questionQueue.length === 0) {
@@ -708,19 +670,8 @@
                     }
                     document.getElementById('ui-score').textContent = `점수: ${this.score}`;
                     document.getElementById('ui-progress').textContent = `진행률: ${this.questionCount}/${this.maxQuestions}`;
-                } else {
-                    // 핵심 수정: 타이머가 글자를 갱신하고 있으므로 여기서는 점수만 바꿉니다.
-                    document.getElementById('ui-score').textContent = `점수: ${this.score}`;
                 }
-                
                 const qEl = document.getElementById('ui-question'); const subEl = document.getElementById('ui-subtext');
-                
-                // 타임 챌린지 중 문제가 다 떨어지지 않도록 무한 리필 장치 추가
-                if (this.questionQueue.length === 0) {
-                    [0, 1, 2, 3].forEach(sId => { for(let p=0; p<12; p++) this.questionQueue.push({ stringId: sId, pitch: p }); });
-                    this.questionQueue.sort(() => Math.random() - 0.5);
-                }
-
                 const currentTask = this.questionQueue.shift();
 
                 if ([1, 2, 3, 5].includes(this.currentMode)) {
@@ -730,17 +681,15 @@
                     subEl.textContent = "지정된 줄 안에서 정답 위치를 클릭하세요.";
                 } else if (this.currentMode === 4) {
                     this.targetPitch = currentTask.pitch; this.targetTargets = [];
+                    // 수정 완료: 오직 #fretboard에서만 정답 카운팅
                     document.querySelectorAll('#fretboard .fret').forEach(f => { if (parseInt(f.dataset.pitch) === this.targetPitch) this.targetTargets.push(f); });
                     this.foundTargets = 0; qEl.textContent = `모든 '${this.getNoteName(this.targetPitch)}' 찾기`;
                     subEl.textContent = `남은 개수: ${this.targetTargets.length}개`;
                 } else if (this.currentMode === 6) {
-                    const rootPitch = currentTask.pitch; 
-                    const intervals = [
-                        {name:"2도", semitones:2}, {name:"3도", semitones:4}, {name:"4도", semitones:5}, {name:"5도", semitones:7},
-                        {name:"6도", semitones:9}, {name:"7도", semitones:11}, {name:"♭7도", semitones:10}
-                    ];
+                    const rootPitch = currentTask.pitch; const intervals = [{name:"2도", semitones:2}, {name:"3도", semitones:4}, {name:"4도", semitones:5}, {name:"5도", semitones:7}];
                     const interval = intervals[Math.floor(Math.random() * intervals.length)];
                     this.targetPitch = (rootPitch + interval.semitones) % 12; this.targetTargets = [];
+                    // 수정 완료: 오직 #fretboard에서만 정답 카운팅 및 루트음 표시
                     document.querySelectorAll('#fretboard .fret').forEach(f => {
                         const pitch = parseInt(f.dataset.pitch);
                         if (pitch === this.targetPitch) this.targetTargets.push(f);
@@ -784,6 +733,7 @@
                 } else {
                     this.playSound('wrong'); this.showWrongTemp(fretDiv);
                     this.isQuestionActive = false; document.getElementById('btn-next').style.display = 'block'; 
+                    // 수정 완료: 오답 시 힌트 색상을 오직 #fretboard에만 표시
                     document.querySelectorAll('#fretboard .fret').forEach(f => {
                         if (parseInt(f.dataset.pitch) === this.targetPitch && (this.targetString === -1 || parseInt(f.dataset.string) === this.targetString)) {
                             f.classList.add('hint'); f.querySelector('.fret-note').textContent = notesSharp[this.targetPitch];
@@ -795,7 +745,7 @@
             showWrongTemp(fretDiv) { fretDiv.classList.add('wrong'); setTimeout(() => fretDiv.classList.remove('wrong'), 400); }
             nextQuestion() { clearTimeout(this.nextTimeout); this.generateQuestion(); }
         }
-        
+
         let app;
         document.addEventListener('DOMContentLoaded', () => { app = new BassApp(); });
 
@@ -824,23 +774,165 @@
                     { b: 4, s: 0, f: 3 }, { b: 4.5, s: 0, f: 3 }, { b: 5.75, s: 0, f: 3 }, { b: 6.50, s: 0, f: 3, mute: true }, { b: 6.75, s: 0, f: 3 }, { b: 7.50, s: 1, f: 5 }, { b: 7.75, s: 1, f: 4 },
                     { b: 8, s: 1, f: 3 }, { b: 9.75, s: 1, f: 3 }, { b: 10.50, s: 1, f: 3, mute: true }, { b: 10.75, s: 1, f: 3 }, { b: 11, s: 1, f: 3 },
                     { b: 12, s: 1, f: 3 }, { b: 13.75, s: 1, f: 3 }, { b: 14.50, s: 1, f: 3, mute: true }, { b: 14.75, s: 1, f: 3 }, { b: 15.50, s: 1, f: 3 }, { b: 15.75, s: 1, f: 4 },
+
                     { b: 16, s: 1, f: 5 }, { b: 17.75, s: 1, f: 5 }, { b: 18.50, s: 1, f: 5, mute: true }, { b: 18.75, s: 1, f: 5 }, { b: 19.50, s: 0, f: 1 }, { b: 19.75, s: 0, f: 2 },
                     { b: 20, s: 0, f: 3 }, { b: 20.5, s: 0, f: 3 }, { b: 21.75, s: 0, f: 3 }, { b: 22.50, s: 0, f: 3, mute: true }, { b: 22.75, s: 0, f: 3 }, { b: 23.50, s: 1, f: 5 }, { b: 23.75, s: 1, f: 4 },
                     { b: 24, s: 1, f: 3 }, { b: 25.75, s: 1, f: 3 }, { b: 26.50, s: 1, f: 3, mute: true }, { b: 26.75, s: 1, f: 3 }, { b: 27, s: 1, f: 3 },
                     { b: 28, s: 1, f: 3 }, { b: 29.75, s: 1, f: 3 }, { b: 30.50, s: 1, f: 3, mute: true }, { b: 30.75, s: 1, f: 3 }, { b: 31.50, s: 1, f: 3 }, { b: 31.75, s: 1, f: 4 }, { b: 32, s: 1, f: 5 }
                 ]
             },
-            { id: 2, title: "2. 해머링 온 활용", bpm: 90, progression: "C - Am - F - G", audioSrc: "hammer-on.mp3", imgSrc: "tab2.png", leadInTime: 0.0, pattern: [] },
-            { id: 3, title: "3. 코드톤 3도 활용", bpm: 95, progression: "패턴 연습 진행", audioSrc: "chord-3rd.mp3", imgSrc: "tab3.png", leadInTime: 0.0, pattern: [] },
-            { id: 4, title: "4. 코드톤 5도 활용", bpm: 95, progression: "패턴 연습 진행", audioSrc: "chord-5th.mp3", imgSrc: "tab4.png", leadInTime: 0.0, pattern: [] },
-            { id: 5, title: "5. 코드톤 7, 5도 활용", bpm: 95, progression: "패턴 연습 진행", audioSrc: "chord-75th.mp3", imgSrc: "tab5.png", leadInTime: 0.0, pattern: [] },
-            { id: 6, title: "6. 코드톤 7, 3도, 헤머링 온 활용", bpm: 95, progression: "패턴 연습 진행", audioSrc: "chord-73hammer.mp3", imgSrc: "tab6.png", leadInTime: 0.0, pattern: [] },
-            { id: 7, title: "7. 근음, 2, 3도 활용", bpm: 95, progression: "패턴 연습 진행", audioSrc: "root-23rd.mp3", imgSrc: "tab7.png", leadInTime: 0.0, pattern: [] },
-            { id: 8, title: "8. 풀링 오프, 더블크로매틱 어프로치 활용", bpm: 95, progression: "패턴 연습 진행", audioSrc: "pull-off-chromatic.mp3", imgSrc: "tab8.png", leadInTime: 0.0, pattern: [] },
-            { id: 9, title: "Example 1", bpm: 95, progression: "종합 예제 곡 1", audioSrc: "example1.mp3", imgSrc: "ex1.png", leadInTime: 0.0, pattern: [] },
-            { id: 10, title: "Example 2", bpm: 95, progression: "종합 예제 곡 2", audioSrc: "example2.mp3", imgSrc: "ex2.png", leadInTime: 0.0, pattern: [] },
-            { id: 11, title: "Example 3", bpm: 95, progression: "종합 예제 곡 3", audioSrc: "example3.mp3", imgSrc: "ex3.png", leadInTime: 0.0, pattern: [] },
-            { id: 12, title: "Example 4", bpm: 95, progression: "종합 예제 곡 4", audioSrc: "example4.mp3", imgSrc: "ex4.png", leadInTime: 0.0, pattern: [] }
+
+            {   
+                id: 2, 
+                title: "2. 해머링 온 활용", 
+                bpm: 95, 
+                progression: "Dm7 - G7 - CM7", 
+                audioSrc: "hammer-on.mp3", 
+                imgSrc: "tab2.png", 
+                leadInTime: 0.0, 
+                pattern: [
+                    { b: 0, s: 1, f: 5 }, { b: 1.75, s: 1, f: 5 }, { b: 2.50, s: 1, f: 5, mute: true }, { b: 2.75, s: 1, f: 5 }, { b: 3.50, s: 0, f: 3 }, { b: 3.75, s: 0, f: 5 },
+                    { b: 4, s: 0, f: 3 }, { b: 4.5, s: 0, f: 3 }, { b: 5.75, s: 0, f: 3 }, { b: 6.50, s: 0, f: 3, mute: true }, { b: 6.75, s: 0, f: 3 }, { b: 7.50, s: 1, f: 3 }, { b: 7.75, s: 1, f: 5 },
+                    { b: 8, s: 1, f: 3 }, { b: 9.75, s: 1, f: 3 }, { b: 10.50, s: 1, f: 3, mute: true }, { b: 10.75, s: 1, f: 3 }, { b: 11, s: 1, f: 3 },
+                    { b: 12, s: 1, f: 3 }, { b: 13.75, s: 1, f: 3 }, { b: 14.50, s: 1, f: 3, mute: true }, { b: 14.75, s: 1, f: 3 }, { b: 15.50, s: 1, f: 5 }, { b: 15.75, s: 1, f: 7 },
+
+                    { b: 16, s: 1, f: 5 }, { b: 17.75, s: 1, f: 5 }, { b: 18.50, s: 1, f: 5, mute: true }, { b: 18.75, s: 1, f: 5 }, { b: 19.50, s: 0, f: 3 }, { b: 19.75, s: 0, f: 5 },
+                    { b: 20, s: 0, f: 3 }, { b: 20.5, s: 0, f: 3 }, { b: 21.75, s: 0, f: 3 }, { b: 22.50, s: 0, f: 3, mute: true }, { b: 22.75, s: 0, f: 3 }, { b: 23.50, s: 1, f: 3 }, { b: 23.75, s: 1, f: 5 },
+                    { b: 24, s: 1, f: 3 }, { b: 25.75, s: 1, f: 3 }, { b: 26.50, s: 1, f: 3, mute: true }, { b: 26.75, s: 1, f: 3 }, { b: 27, s: 1, f: 3 },
+                    { b: 28, s: 1, f: 3 }, { b: 29.75, s: 1, f: 3 }, { b: 30.50, s: 1, f: 3, mute: true }, { b: 30.75, s: 1, f: 3 }, { b: 31.50, s: 1, f: 5 }, { b: 31.75, s: 1, f: 7 }, { b: 32, s: 1, f: 5 }
+
+                ]
+            },
+
+            { 
+                id: 3, 
+                title: "3. 코드톤 3도 활용", 
+                bpm: 95, 
+                progression: "Dm7 - G7 - CM7", 
+                audioSrc: "chord-3rd.mp3", 
+                imgSrc: "tab3.png", 
+                leadInTime: 0.0, 
+                pattern: [
+                    { b: 0, s: 1, f: 5 }, { b: 1.75, s: 1, f: 5 }, { b: 2.50, s: 1, f: 5, mute: true }, { b: 2.75, s: 1, f: 5 }, { b: 3.00, s: 2, f: 3 }, { b: 3.25, s: 1, f: 5 }, { b: 3.50, s: 2, f: 3 },
+                    { b: 4, s: 2, f: 5 }, { b: 4.5, s: 2, f: 5 }, { b: 5.75, s: 0, f: 3 }, { b: 6.50, s: 0, f: 3, mute: true }, { b: 6.75, s: 0, f: 3 }, { b: 7.00, s: 1, f: 2 }, { b: 7.25, s: 0, f: 3 }, { b: 7.50, s: 1, f: 2 },
+                    { b: 8, s: 1, f: 3 }, { b: 9.75, s: 1, f: 3 }, { b: 10.50, s: 1, f: 3, mute: true }, { b: 10.75, s: 1, f: 3 }, { b: 11, s: 1, f: 3 },
+                    { b: 12, s: 1, f: 3 }, { b: 13.75, s: 1, f: 3 }, { b: 14.50, s: 1, f: 3, mute: true }, { b: 14.75, s: 1, f: 3 }, { b: 15, s: 2, f: 2 }, { b: 15.25, s: 1, f: 3 }, { b: 15.50, s: 1, f: 3 },
+
+                    { b: 16, s: 1, f: 5 }, { b: 17.75, s: 1, f: 5 }, { b: 18.50, s: 1, f: 5, mute: true }, { b: 18.75, s: 1, f: 5 }, { b: 19.00, s: 2, f: 3 }, { b: 19.25, s: 1, f: 5 }, { b: 19.50, s: 2, f: 3 },
+                    { b: 20, s: 2, f: 5 }, { b: 20.5, s: 2, f: 5 }, { b: 21.75, s: 0, f: 3 }, { b: 22.50, s: 0, f: 3, mute: true }, { b: 22.75, s: 0, f: 3 }, { b: 23.00, s: 1, f: 2 }, { b: 23.25, s: 0, f: 3 }, { b: 23.50, s: 1, f: 2 },
+                    { b: 24, s: 1, f: 3 }, { b: 25.75, s: 1, f: 3 }, { b: 26.50, s: 1, f: 3, mute: true }, { b: 26.75, s: 1, f: 3 }, { b: 27, s: 1, f: 3 },
+                    { b: 28, s: 1, f: 3 }, { b: 29.75, s: 1, f: 3 }, { b: 30.50, s: 1, f: 3, mute: true }, { b: 30.75, s: 1, f: 3 }, { b: 31, s: 2, f: 2 }, { b: 31.25, s: 1, f: 3 }, { b: 31.5, s: 1, f: 3 }, { b: 32, s: 1, f: 5 }
+                ] 
+            },
+
+            { 
+                id: 4, 
+                title: "4. 코드톤 5도 활용", 
+                bpm: 95, progression: "Dm7 - G7 - CM7", 
+                audioSrc: "chord-5th.mp3", 
+                imgSrc: "tab4.png", 
+                leadInTime: 0.0, 
+                pattern: [
+                    { b: 0, s: 1, f: 5 }, { b: 1.75, s: 1, f: 5 }, { b: 2.50, s: 1, f: 5, mute: true }, { b: 2.75, s: 1, f: 5 }, { b: 3.00, s: 0, f: 5 }, { b: 3.5, s: 1, f: 5 }, { b: 3.75, s: 0, f: 5 },
+                    { b: 4, s: 0, f: 3 }, { b: 4.5, s: 0, f: 3 }, { b: 5.75, s: 0, f: 3 }, { b: 6.50, s: 0, f: 3, mute: true }, { b: 6.75, s: 0, f: 3 }, { b: 7.00, s: 1, f: 5 }, { b: 7.50, s: 2, f: 5 }, { b: 7.75, s: 1, f: 5 },
+                    { b: 8, s: 1, f: 3 }, { b: 9.75, s: 1, f: 3 }, { b: 10.50, s: 1, f: 3, mute: true }, { b: 10.75, s: 1, f: 3 }, { b: 11, s: 1, f: 3 },
+                    { b: 12, s: 1, f: 3 }, { b: 13.75, s: 1, f: 3 }, { b: 14.50, s: 1, f: 3, mute: true }, { b: 14.75, s: 1, f: 3 }, { b: 15, s: 3, f: 5 }, { b: 15.25, s: 2, f: 5 }, { b: 15.50, s: 1, f: 3 },
+
+                    { b: 16, s: 1, f: 5 }, { b: 17.75, s: 1, f: 5 }, { b: 18.50, s: 1, f: 5, mute: true }, { b: 18.75, s: 1, f: 5 }, { b: 19.00, s: 0, f: 5 }, { b: 19.50, s: 1, f: 5 }, { b: 19.75, s: 0, f: 5 },
+                    { b: 20, s: 0, f: 3 }, { b: 20.5, s: 0, f: 3 }, { b: 21.75, s: 0, f: 3 }, { b: 22.50, s: 0, f: 3, mute: true }, { b: 22.75, s: 0, f: 3 }, { b: 23.00, s: 1, f: 5 }, { b: 23.50, s: 2, f: 5 }, { b: 23.75, s: 1, f: 5 },
+                    { b: 24, s: 1, f: 3 }, { b: 25.75, s: 1, f: 3 }, { b: 26.50, s: 1, f: 3, mute: true }, { b: 26.75, s: 1, f: 3 }, { b: 27, s: 1, f: 3 },
+                    { b: 28, s: 1, f: 3 }, { b: 29.75, s: 1, f: 3 }, { b: 30.50, s: 1, f: 3, mute: true }, { b: 30.75, s: 1, f: 3 }, { b: 31, s: 3, f: 5 }, { b: 31.25, s: 2, f: 5 }, { b: 31.50, s: 1, f: 3 }, { b: 32, s: 1, f: 5 }
+                ] 
+            },
+
+            { 
+                id: 5, 
+                title: "5. 코드톤 7, 5도 활용",
+                bpm: 95, 
+                progression: "Dm7 - G7 - CM7", 
+                audioSrc: "chord-75th.mp3", 
+                imgSrc: "tab5.png", 
+                leadInTime: 0.0, 
+                pattern: [
+                    { b: 0, s: 1, f: 5 }, { b: 1.75, s: 1, f: 5 }, { b: 2.50, s: 1, f: 5, mute: true }, { b: 2.75, s: 1, f: 5 }, { b: 3.00, s: 1, f: 3 }, { b: 3.25, s: 1, f: 5 }, { b: 3.5, s: 1, f: 3 }, { b: 3.75, s: 0, f: 5 },
+                    { b: 4, s: 0, f: 3 }, { b: 4.5, s: 0, f: 3 }, { b: 5.75, s: 0, f: 3 }, { b: 6.50, s: 0, f: 3, mute: true }, { b: 6.75, s: 1, f: 5 }, { b: 7.00, s: 2, f: 3 }, { b: 7.25, s: 2, f: 5 }, { b: 7.50, s: 2, f: 3 }, { b: 7.75, s: 1, f: 5 },
+                    { b: 8, s: 1, f: 3 }, { b: 9.75, s: 1, f: 3 }, { b: 10.50, s: 1, f: 3, mute: true }, { b: 10.75, s: 1, f: 3 }, { b: 11, s: 1, f: 2 }, { b: 11.25, s: 1, f: 3 }, { b: 11.50, s: 1, f: 2 }, { b: 11.75, s: 0, f: 3 },
+                    { b: 12, s: 1, f: 3 }, { b: 12.5, s: 1, f: 3 }, { b: 13.75, s: 1, f: 3 }, { b: 14.50, s: 1, f: 3, mute: true }, { b: 14.75, s: 2, f: 5 }, { b: 15, s: 3, f: 5 }, { b: 15.25, s: 3, f: 4 }, { b: 15.50, s: 2, f: 5 }, { b: 15.75, s: 1, f: 3 },
+
+                    { b: 16, s: 1, f: 5 }, { b: 17.75, s: 1, f: 5 }, { b: 18.50, s: 1, f: 5, mute: true }, { b: 18.75, s: 1, f: 5 }, { b: 19.00, s: 1, f: 3 }, { b: 19.25, s: 1, f: 5 }, { b: 19.50, s: 1, f: 3 }, { b: 19.75, s: 0, f: 5 },
+                    { b: 20, s: 0, f: 3 }, { b: 20.5, s: 0, f: 3 }, { b: 21.75, s: 0, f: 3 }, { b: 22.50, s: 0, f: 3, mute: true }, { b: 22.75, s: 1, f: 5 }, { b: 23.00, s: 2, f: 3 }, { b: 23.25, s: 2, f: 5 }, { b: 23.50, s: 2, f: 3 }, { b: 23.75, s: 1, f: 5 },
+                    { b: 24, s: 1, f: 3 }, { b: 24.5, s: 1, f: 3 }, { b: 25.75, s: 1, f: 3 }, { b: 26.50, s: 1, f: 3, mute: true }, { b: 26.75, s: 1, f: 3 }, { b: 27, s: 1, f: 2 }, { b: 27.25, s: 1, f: 3 }, { b: 27.50, s: 1, f: 2 }, { b: 27.75, s: 0, f: 3 },
+                    { b: 28, s: 1, f: 3 }, { b: 29.75, s: 1, f: 3 }, { b: 30.50, s: 1, f: 3, mute: true }, { b: 30.75, s: 2, f: 5 }, { b: 31, s: 3, f: 5 }, { b: 31.25, s: 3, f: 4 }, { b: 31.50, s: 2, f: 5 }, { b: 31.75, s: 1, f: 3 }, { b: 32, s: 1, f: 5 }
+                ] 
+            },
+            
+            { 
+                id: 6,
+                title: "6. 코드톤 7, 3도, 헤머링 온 활용", 
+                bpm: 95, 
+                progression: "Dm7 - G7 - CM7", 
+                audioSrc: "chord-73hammer.mp3", 
+                imgSrc: "tab6.png", 
+                leadInTime: 0.0, 
+                pattern: [
+                    { b: 0, s: 1, f: 5 }, { b: 1.75, s: 1, f: 5 }, { b: 2.50, s: 1, f: 5, mute: true }, { b: 2.75, s: 1, f: 5 }, { b: 3.00, s: 1, f: 3 }, { b: 3.25, s: 1, f: 5 }, { b: 3.5, s: 2, f: 3 }, { b: 3.75, s: 1, f: 5 },
+                    { b: 4, s: 2, f: 5 }, { b: 4.5, s: 0, f: 3 }, { b: 5.75, s: 0, f: 3 }, { b: 6.50, s: 0, f: 3, mute: true }, { b: 6.75, s: 1, f: 3 }, { b: 7.00, s: 0, f: 1 }, { b: 7.25, s: 1, f: 3 }, { b: 7.50, s: 1, f: 2 }, { b: 7.75, s: 0, f: 3 },
+                    { b: 8, s: 1, f: 3 }, { b: 9.75, s: 1, f: 3 }, { b: 10.50, s: 1, f: 3, mute: true }, { b: 10.75, s: 1, f: 3 }, { b: 11, s: 1, f: 3 },
+                    { b: 12, s: 1, f: 3 }, { b: 13.75, s: 1, f: 3 }, { b: 14.50, s: 1, f: 3, mute: true }, { b: 14.75, s: 2, f: 5 }, { b: 15, s: 1, f: 2 }, { b: 15.25, s: 1, f: 3 }, { b: 15.50, s: 2, f: 2 }, { b: 15.75, s: 1, f: 3 },
+
+                    { b: 16, s: 1, f: 5 }, { b: 17.75, s: 1, f: 5 }, { b: 18.50, s: 1, f: 5, mute: true }, { b: 18.75, s: 1, f: 5 }, { b: 19.00, s: 1, f: 3 }, { b: 19.25, s: 1, f: 5 }, { b: 19.50, s: 2, f: 3 }, { b: 19.75, s: 1, f: 5 },
+                    { b: 20, s: 2, f: 5 }, { b: 20.5, s: 0, f: 3 }, { b: 21.75, s: 0, f: 3 }, { b: 22.50, s: 0, f: 3, mute: true }, { b: 22.75, s: 1, f: 3 }, { b: 23.00, s: 0, f: 1 }, { b: 23.25, s: 0, f: 3 }, { b: 23.50, s: 1, f: 2 }, { b: 23.75, s: 0, f: 3 },
+                    { b: 24, s: 1, f: 3 }, { b: 25.75, s: 1, f: 3 }, { b: 26.50, s: 1, f: 3, mute: true }, { b: 26.75, s: 1, f: 3 }, { b: 27, s: 1, f: 3 },
+                    { b: 28, s: 1, f: 3 }, { b: 29.75, s: 1, f: 3 }, { b: 30.50, s: 1, f: 3, mute: true }, { b: 30.75, s: 2, f: 5 }, { b: 31, s: 1, f: 2 }, { b: 31.25, s: 1, f: 3 }, { b: 31.50, s: 2, f: 2 }, { b: 31.75, s: 1, f: 3 }, { b: 32, s: 1, f: 5 }
+                ] 
+            },
+
+            { 
+                id: 7, 
+                title: "7. 근음, 2, 3도 활용", 
+                bpm: 95, 
+                progression: "Dm7 - G7 - CM7", 
+                audioSrc: "root-23rd.mp3", 
+                imgSrc: "tab7.png", 
+                leadInTime: 0.0, 
+                pattern: [
+                    { b: 0, s: 1, f: 5 }, { b: 1.75, s: 1, f: 5 }, { b: 2.50, s: 1, f: 5, mute: true }, { b: 2.75, s: 1, f: 5 }, { b: 3, s: 0, f: 0 }, { b: 3.5, s: 0, f: 1 },
+                    { b: 4, s: 0, f: 3 }, { b: 4.5, s: 0, f: 3 }, { b: 5.75, s: 0, f: 3 }, { b: 6.50, s: 0, f: 3, mute: true }, { b: 6.75, s: 0, f: 3 }, { b: 7, s: 0, f: 5 }, { b: 7.5, s: 1, f: 2 },
+                    { b: 8, s: 1, f: 3 }, { b: 9.75, s: 1, f: 3 }, { b: 10.50, s: 1, f: 3, mute: true }, { b: 10.75, s: 1, f: 3 }, { b: 11, s: 1, f: 3 },
+                    { b: 12, s: 1, f: 3 }, { b: 13.75, s: 1, f: 3 }, { b: 14.50, s: 1, f: 3, mute: true }, { b: 14.75, s: 1, f: 3 }, { b: 15, s: 1, f: 5 }, { b: 15.5, s: 1, f: 7 },
+
+                    { b: 16, s: 1, f: 5 }, { b: 17.75, s: 1, f: 5 }, { b: 18.50, s: 1, f: 5, mute: true }, { b: 18.75, s: 1, f: 5 }, { b: 19, s: 0, f: 0 }, { b: 19.5, s: 0, f: 1 },
+                    { b: 20, s: 0, f: 3 }, { b: 20.5, s: 0, f: 3 }, { b: 21.75, s: 0, f: 3 }, { b: 22.50, s: 0, f: 3, mute: true }, { b: 22.75, s: 0, f: 3 }, { b: 23, s: 0, f: 5 }, { b: 23.7, s: 1, f: 2 },
+                    { b: 24, s: 1, f: 3 }, { b: 25.75, s: 1, f: 3 }, { b: 26.50, s: 1, f: 3, mute: true }, { b: 26.75, s: 1, f: 3 }, { b: 27, s: 1, f: 3 },
+                    { b: 28, s: 1, f: 3 }, { b: 29.75, s: 1, f: 3 }, { b: 30.50, s: 1, f: 3, mute: true }, { b: 30.75, s: 1, f: 3 }, { b: 31, s: 1, f: 5 }, { b: 31.5, s: 1, f: 7 }, { b: 32, s: 1, f: 5 }
+                ] 
+            },
+
+            { 
+                id: 8, 
+                title: "8. 풀링 오프, 더블크로매틱 어프로치 활용", 
+                bpm: 95, 
+                progression: "Dm7 - G7 - CM7",
+                audioSrc: "pull-off-chromatic.mp3", 
+                imgSrc: "tab8.png", 
+                leadInTime: 0.0, 
+                pattern: [
+                    { b: 0, s: 1, f: 5 }, { b: 1.75, s: 1, f: 5 }, { b: 2.50, s: 1, f: 5, mute: true }, { b: 2.75, s: 1, f: 5 }, { b: 3.00, s: 1, f: 5 }, { b: 3.25, s: 1, f: 4 }, { b: 3.5, s: 0, f: 5 }, { b: 3.75, s: 0, f: 4 },
+                    { b: 4, s: 0, f: 3 }, { b: 4.5, s: 0, f: 3 }, { b: 5.75, s: 0, f: 3 }, { b: 6.50, s: 0, f: 3, mute: true }, { b: 6.75, s: 1, f: 3 }, { b: 7.00, s: 2, f: 5 }, { b: 7.25, s: 2, f: 3 }, { b: 7.50, s: 1, f: 5 }, { b: 7.75, s: 1, f: 4 },
+                    { b: 8, s: 1, f: 3 }, { b: 9.75, s: 1, f: 3 }, { b: 10.50, s: 1, f: 3, mute: true }, { b: 10.75, s: 1, f: 3 }, { b: 11, s: 1, f: 3 },
+                    { b: 12, s: 1, f: 3 }, { b: 13.75, s: 1, f: 3 }, { b: 14.50, s: 1, f: 3, mute: true }, { b: 14.75, s: 2, f: 5 }, { b: 15, s: 2, f: 5 }, { b: 15.25, s: 2, f: 3 }, { b: 15.50, s: 1, f: 3 }, { b: 15.75, s: 1, f: 4 },
+
+                    { b: 16, s: 1, f: 5 }, { b: 17.75, s: 1, f: 5 }, { b: 18.50, s: 1, f: 5, mute: true }, { b: 18.75, s: 1, f: 5 }, { b: 19.00, s: 1, f: 5 }, { b: 19.25, s: 1, f: 3 }, { b: 19.50, s: 0, f: 5 }, { b: 19.75, s: 0, f: 4 },
+                    { b: 20, s: 0, f: 3 }, { b: 20.5, s: 0, f: 3 }, { b: 21.75, s: 0, f: 3 }, { b: 22.50, s: 0, f: 3, mute: true }, { b: 22.75, s: 1, f: 3 }, { b: 23.00, s: 2, f: 5 }, { b: 23.25, s: 2, f: 3 }, { b: 23.50, s: 1, f: 5 }, { b: 23.75, s: 1, f: 4 },
+                    { b: 24, s: 1, f: 3 }, { b: 25.75, s: 1, f: 3 }, { b: 26.50, s: 1, f: 3, mute: true }, { b: 26.75, s: 1, f: 3 }, { b: 27, s: 1, f: 3 },
+                    { b: 28, s: 1, f: 3 }, { b: 29.75, s: 1, f: 3 }, { b: 30.50, s: 1, f: 3, mute: true }, { b: 30.75, s: 2, f: 5 }, { b: 31, s: 2, f: 5 }, { b: 31.25, s: 2, f: 3 }, { b: 31.50, s: 1, f: 3 }, { b: 31.75, s: 1, f: 4 }, { b: 32, s: 1, f: 5 }
+                ] 
+            },
+
+            { id: 9, title: "Example 1", bpm: 95, progression: "Dm7 - G7 - CM7", audioSrc: "example1.mp3", imgSrc: "ex1.png", leadInTime: 0.0, pattern: [] },
+            { id: 10, title: "Example 2", bpm: 95, progression: "Dm7 - G7 - CM7", audioSrc: "example2.mp3", imgSrc: "ex2.png", leadInTime: 0.0, pattern: [] },
+            { id: 11, title: "Example 3", bpm: 95, progression: "Dm7 - G7 - CM7", audioSrc: "example3.mp3", imgSrc: "ex3.png", leadInTime: 0.0, pattern: [] },
+            { id: 12, title: "Example 4", bpm: 95, progression: "Dm7 - G7 - CM7", audioSrc: "example4.mp3", imgSrc: "ex4.png", leadInTime: 0.0, pattern: [] }
         ];
 
         function selectCompingPattern(patternId) {
